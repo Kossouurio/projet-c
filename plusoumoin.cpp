@@ -1,62 +1,105 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 
-#include <iostream>
+int AskInt(const char text[])
+{
+	int number = 0;
+	
+	while (1)
+	{
+		printf("%s\n", text);
 
-int AskInt(const char text[], int min, int max)
+		if (scanf_s("%d", &number) == 1)
+			break;
+		printf("Erreur de saisie, veuillez recommencer.\n\n");
+		while (getchar() != '\n');
+	}
+	return number;
+}
+
+char AskChar(const char text[], const char numb[]) {
+
+	char chartext;
+
+	while (1)
+	{
+		printf("%s\n", text);
+		scanf_s("%c", &chartext, 1);
+		while (getchar() != '\n');
+		
+
+		for (int i = 0; i < sizeof(numb); i++) {
+			if (chartext == numb[i]) {
+				return chartext;
+			}
+		}
+
+
+		printf("Erreur de saisie, veuillez recommencer.\n");
+	}
+}
+
+int AskIntInterval(const char text[], int MIN, int MAX)
 {
 	int number = 0;
 
 	while (1)
 	{
 		printf("%s\n", text);
-		scanf_s("%d", &number);
 
-		if (number >= min || number <= max) {
-			fputs("error: invalid input\n", stderr);
-		}
-		else {
-			printf("Le nombre doit etre compris entre %d et %d\n", min, max);
-			continue;
-		}
-	}
-	
-
-	while (number >= 0) {
-		printf("Enter a number: ");
-
-		if (scanf_s("%d", &number) != 1) {
-			fputs("error: invalid input\n", stderr);
-		}
-		else if (number < 0) {
-			fputs("error: negative input\n", stderr);
-		}
-		else {
+		if (scanf_s("%d", &number) == 1 && number >= MIN && number <= MAX) {
 			break;
 		}
+		printf("Entrer un nombre entre %d et %d.\n\n", MIN, MAX);
 	}
-
-	return 0;
+	return number;
 }
 
 int main()
 {
+	char replay = 'Y';
 
-	int numberMystery = 0, numberChosen = 0;
+	do {
+		int numberMystery = 0, numberChosen = 0, MIN = 1, MAX = 100, essais = 3;
 
-	srand(time(NULL));
-	const int MAX = 100, MIN = 1;
-	numberMystery = (rand() % (MAX - MIN + 1)) + MIN;
+		MIN = AskInt("Entrez la valeur minimale : ");
+		MAX = AskInt("Entrez la valeur maximale : ");
 
-	do
-	{
-		numberChosen = AskInt("Entrez un nombre entre 1 et 100 : ", 1, 100);
+		while (MAX <= MIN) {
+			MAX = AskInt("Veuillez rentrer une borne maximale differente et superieure de la borne minimale :");
+		}
 
-		if (numberMystery > numberChosen)
-			printf("C'est plus !\n\n");
-		else if (numberMystery < numberChosen)
-			printf("C'est moins !\n\n");
-		else
-			printf("Bravo, vous avez trouve le nombre mystere !!!\n\n");
-	} while (numberChosen != numberMystery);
+		srand(time(NULL));
+		numberMystery = (rand() % (MAX - MIN + 1)) + MIN;
+
+		essais = AskInt("Entrez le nombre d'essais : ");
+
+		system("cls");
+
+		while (essais > 0)
+		{
+			numberChosen = AskIntInterval("Entrez un nombre : ", MIN, MAX);
+
+			if (numberMystery > numberChosen) {
+				printf("C'est plus !\n\n");
+			}
+			
+			else if (numberMystery < numberChosen) {
+				printf("C'est moins !\n\n");
+			}
+			
+			else {
+				printf("Bravo, vous avez trouve le nombre mystere !!!\n\n");
+				break;
+			}
+			essais--;
+		}
+		if (essais == 0) { printf("Vous avez depasse le nombre de tentatives, le nombre mystere etait : %d\n", numberMystery); }
+		
+		replay = AskChar("Voulez-vous rejouer ? (y, n, Y, N) : \n", "ynYN");
+
+	} while (replay == 'y' || replay == 'Y');
 
 	return 0;
 }
@@ -64,11 +107,3 @@ int main()
 // Compiler le programme : F6
 // Exécuter le programme : Ctrl+F5 ou menu Déboguer > Exécuter sans débogage
 // Déboguer le programme : F5 ou menu Déboguer > Démarrer le débogage
-
-// Astuces pour bien démarrer : 
-//   1. Utilisez la fenêtre Explorateur de solutions pour ajouter des fichiers et les gérer.
-//   2. Utilisez la fenêtre Team Explorer pour vous connecter au contrôle de code source.
-//   3. Utilisez la fenêtre Sortie pour voir la sortie de la génération et d'autres messages.
-//   4. Utilisez la fenêtre Liste d'erreurs pour voir les erreurs.
-//   5. Accédez à Projet > Ajouter un nouvel élément pour créer des fichiers de code, ou à Projet > Ajouter un élément existant pour ajouter des fichiers de code existants au projet.
-//   6. Pour rouvrir ce projet plus tard, accédez à Fichier > Ouvrir > Projet et sélectionnez le fichier .sln.
