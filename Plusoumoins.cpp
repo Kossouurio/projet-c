@@ -1,8 +1,7 @@
-#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-
+#include "Exercices.h"
 
 
 int get_length(const char* str)
@@ -60,7 +59,7 @@ int AskIntBetween(const char text[], int Min, int Max) {
 
 
 char AskChar(const char text[], const char ValidChar[]) {
-	 char charinput;
+	char charinput;
 
 	while (1) {
 		printf("%s (Reponses valides : ", text);
@@ -94,8 +93,16 @@ char AskChar(const char text[], const char ValidChar[]) {
 
 
 int main() {
+
+	
+	/*Exercice::main();
+	return 0;*/
+	Demineur::main();
+	return 0;
+
 	char replay = 'y';
 	int* t = (int*)malloc(sizeof(int));
+
 	if (t == NULL) {
 		exit(1);
 	}
@@ -110,7 +117,7 @@ int main() {
 		bornemax = AskInt("\nVeuillez rentrer la borne maximale : ");
 
 		while (bornemax <= bornemini) {
-			bornemax = AskInt("Veuillez rentrer une borne maximale différente et supérieure de la borne minimale :");
+			bornemax = AskInt("Veuillez rentrer une borne maximale differente et superieure de la borne minimale :");
 		}
 		NumberOfTry = AskIntBetween("Combien voulez vous de tentatives ? Choisissez un nombre entre", 1, bornemax - bornemini);
 		system("cls");
@@ -121,16 +128,29 @@ int main() {
 		int GuessValue;
 
 		while (tries <= NumberOfTry) {
+			printf("%d", searchedValue);
 
 
 			GuessValue = AskIntBetween("Rentrez un nombre entre", bornemini, bornemax);
 
 
+
 			if (GuessValue == searchedValue) {
 				*(t + FoundNumber) = searchedValue;
 				FoundNumber++;
-				t = (int*)realloc(t, sizeof(int));
-				printf("Bravo vous avez trouve le nombre : %d en %d d'essai(s)", searchedValue, tries);
+				
+				t = (int*) realloc(t, sizeof(int) * (FoundNumber + 1));
+
+				if (t == NULL) {
+					exit(1);
+				}
+
+				printf("Bravo vous avez trouve le nombre : %d en %d d'essai(s)\n", searchedValue, tries);
+				break;
+			}
+			else if (tries <= NumberOfTry) {
+				system("cls");
+				printf("Vous avez perdus ! le nombre mystere etait %d\n", searchedValue);
 				break;
 			}
 			else if (GuessValue < searchedValue) {
@@ -143,15 +163,19 @@ int main() {
 			}
 
 		}
-		system("cls");
-		printf("Vous avez perdus ! le nombre mystere etait %d\n", searchedValue);
-
 		replay = AskChar("Voulez vous rejouer ?", "YyNn");
 
 	} while (replay == 'y' || replay == 'Y');
-	for (int i = 0; i < sizeof(t) / 4; i++) {
-		printf("%d\n", *(t + 1));
+	system("cls");
+	if (FoundNumber >= 1) {
+		printf("Voici la liste de tous les nombres que vous avez trouvés jusqu'a present : [");
+		for (int i = 0; i < FoundNumber - 1; i++) {
+			printf("%d, ", *(t + i));
+		}
+		printf("%d", *(t + FoundNumber - 1));
+		printf("]");
 	}
+	
 	free(t);
 
 	return 0;
