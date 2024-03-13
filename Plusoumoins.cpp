@@ -95,6 +95,11 @@ char AskChar(const char text[], const char ValidChar[]) {
 
 int main() {
 	char replay = 'y';
+	int* t = (int*)malloc(sizeof(int));
+	if (t == NULL) {
+		exit(1);
+	}
+	int FoundNumber = 0;
 	do {
 		system("cls");
 		int bornemini;
@@ -122,7 +127,9 @@ int main() {
 
 
 			if (GuessValue == searchedValue) {
-
+				*(t + FoundNumber) = searchedValue;
+				FoundNumber++;
+				t = (int*)realloc(t, sizeof(int));
 				printf("Bravo vous avez trouve le nombre : %d en %d d'essai(s)", searchedValue, tries);
 				break;
 			}
@@ -142,6 +149,10 @@ int main() {
 		replay = AskChar("Voulez vous rejouer ?", "YyNn");
 
 	} while (replay == 'y' || replay == 'Y');
+	for (int i = 0; i < sizeof(t) / 4; i++) {
+		printf("%d\n", *(t + 1));
+	}
+	free(t);
 
 	return 0;
 }
