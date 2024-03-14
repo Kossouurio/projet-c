@@ -95,10 +95,10 @@ char AskChar(const char text[], const char ValidChar[]) {
 int main() {
 
 	
-	/*Exercice::main();
-	return 0;*/
-	Demineur::main();
+	Exercice::main();
 	return 0;
+	/*Demineur::main();
+	return 0;*/
 
 	char replay = 'y';
 	int* t = (int*)malloc(sizeof(int));
@@ -139,11 +139,14 @@ int main() {
 				*(t + FoundNumber) = searchedValue;
 				FoundNumber++;
 				
-				t = (int*) realloc(t, sizeof(int) * (FoundNumber + 1));
+				int* t2  = (int*) realloc(t, sizeof(int) * (FoundNumber + 1));
 
-				if (t == NULL) {
+				if (t2 == NULL) {
+					free(t);
 					exit(1);
 				}
+
+				t = t2;
 
 				printf("Bravo vous avez trouve le nombre : %d en %d d'essai(s)\n", searchedValue, tries);
 				break;
