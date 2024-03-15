@@ -95,10 +95,10 @@ char AskChar(const char text[], const char ValidChar[]) {
 int main() {
 
 	
-	Exercice::main();
-	return 0;
-	/*Demineur::main();
+	/*Exercice::main();
 	return 0;*/
+	Demineur::main();
+	return 0;
 
 	char replay = 'y';
 	int* t = (int*)malloc(sizeof(int));
