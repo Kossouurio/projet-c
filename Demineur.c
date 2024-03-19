@@ -11,6 +11,8 @@ typedef char BOOL2;
 #define TRUE 1
 #define FALSE 0
 
+
+//def Color for Terminal writing
 #define CYAN 11
 #define DARKBLUE 9
 #define YELLOW 14
@@ -122,14 +124,17 @@ int COLORS[] = { CYAN, DARKBLUE, DARKBLUE, YELLOW, YELLOW, PINK, PINK, RED};
 		int Size;
 		Tile** Tile; //tablau a deux dimensions
 		int remainingTiles;
-
+		char Difficulty;
 	} Grid;
  
 	void PrintGrid(Grid* pGrid, BOOL2 ShowBomb) {
+		system("cls");
 		HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-		for (int i = 0; i < pGrid->Size; i++) { //lignes
-			printf("\n"); //saut de ligne
-			for (int j = 0; j < pGrid->Size; j++) { //colonnes
+		for (int i = 0; i < pGrid->Size; i++) { 
+			printf("\n"); 
+			for (int j = 0; j < pGrid->Size; j++) {
+
+				//Si la case est cachée
 				if (pGrid->Tile[i][j].IsRevealed == FALSE)
 				{
 					if (pGrid->Tile[i][j].IsMined == TRUE && ShowBomb == TRUE) {
@@ -137,8 +142,14 @@ int COLORS[] = { CYAN, DARKBLUE, DARKBLUE, YELLOW, YELLOW, PINK, PINK, RED};
 							printf("|X |");
 					}
 					else if (pGrid->Tile[i][j].IsFlag == TRUE) {
-						SetConsoleTextAttribute(hConsole, RED);
-						printf("|F%d |", pGrid->Tile[i][j].Value);
+						if (pGrid->Tile[i][j].Value <= 9) {
+							SetConsoleTextAttribute(hConsole, RED);
+							printf("|%d |", pGrid->Tile[i][j].Value);
+						}
+						else {
+							SetConsoleTextAttribute(hConsole, RED);
+							printf("|%d|", pGrid->Tile[i][j].Value);
+						}
 					}
 					else {
 						if (pGrid->Tile[i][j].Value <= 9) {
@@ -151,6 +162,7 @@ int COLORS[] = { CYAN, DARKBLUE, DARKBLUE, YELLOW, YELLOW, PINK, PINK, RED};
 						}
 					}
 				}
+				//Si la	case est révelée alors afficher le nombre de bombes adjacentes
 				else {
 					SetConsoleTextAttribute(hConsole, COLORS[pGrid->Tile[i][j].AdjacentMines ]);
 					printf("|%d |", pGrid->Tile[i][j].AdjacentMines);
@@ -159,9 +171,19 @@ int COLORS[] = { CYAN, DARKBLUE, DARKBLUE, YELLOW, YELLOW, PINK, PINK, RED};
 			}
 		}
 	}
-	int GenerateBomb(Grid* pGrid) {
+	int GenerateBomb(Grid* pGrid, int iFirst, int jFirst) {
 		system("cls");
-		int bomb_amount = pow(pGrid->Size, 2) * 0.2;
+		float BombRatio;
+		if (pGrid->Difficulty == 'E' || pGrid->Difficulty == 'e') {
+			BombRatio = 0.2;
+		}
+		else if (pGrid->Difficulty == 'M' || pGrid->Difficulty == 'm') {
+			BombRatio = 0.35;
+		}
+		else {
+			BombRatio = 0.4;
+		}
+		int bomb_amount = pow(pGrid->Size, 2) * BombRatio;
 		int size = pow(pGrid->Size,2);
 		int* all_index = (int*)malloc(sizeof(int) * size);
 		if (all_index == NULL) 
@@ -175,6 +197,15 @@ int COLORS[] = { CYAN, DARKBLUE, DARKBLUE, YELLOW, YELLOW, PINK, PINK, RED};
 				index1++;
 			}
 
+		for (int Currenti = iFirst - 1; Currenti <= iFirst + 1; Currenti++) {
+			for (int Currentj = jFirst - 1; Currentj <= jFirst + 1; Currentj++) 
+			{
+				int RmValue = Currenti * 10 + Currentj;
+				all_index[RmValue] = all_index[size - 1];
+				size--;
+			}
+		}
+
 		for (int i = 0; i < bomb_amount; i++)
 		{
 			int index = rand() % size;
@@ -183,9 +214,7 @@ int COLORS[] = { CYAN, DARKBLUE, DARKBLUE, YELLOW, YELLOW, PINK, PINK, RED};
 
 			pGrid->Tile[tile_index / pGrid->Size][tile_index % pGrid->Size].IsMined = TRUE;
 
-			int temp = all_index[size - 1];
-			all_index[size - 1] = tile_index;
-			all_index[index] = temp;
+			all_index[tile_index] = all_index[size - 1];
 
 			size--;
 		}
@@ -206,6 +235,7 @@ int COLORS[] = { CYAN, DARKBLUE, DARKBLUE, YELLOW, YELLOW, PINK, PINK, RED};
 
 	void InitGrid(Grid* pGrid) {
 		pGrid->Size = AskInt("Rentrez la taille de la grille sur laquelle vous voulez jouer : ");
+		pGrid->Difficulty = AskChar("Dans quelle difficulte voulez vous jouer ? (E pour Easy, M pour Medium, H pour Hard", "EeMmHh");
 		
 
 		pGrid->Tile = (Tile**)malloc(sizeof(Tile*) * pGrid->Size);
@@ -234,8 +264,7 @@ int COLORS[] = { CYAN, DARKBLUE, DARKBLUE, YELLOW, YELLOW, PINK, PINK, RED};
 				pGrid->Tile[i][j].Value = i * pGrid->Size + j;
 			}
 		}
-		int bomb_amount = GenerateBomb(pGrid);
-		pGrid->remainingTiles = pow(pGrid->Size, 2) - bomb_amount;
+
 	}
 
 
@@ -255,8 +284,6 @@ int COLORS[] = { CYAN, DARKBLUE, DARKBLUE, YELLOW, YELLOW, PINK, PINK, RED};
 
 	void UpdateGrid(Grid* pGrid, int i, int j)
 	{
-
-
 		pGrid->Tile[i][j].IsRevealed = TRUE;
 		pGrid->remainingTiles--;
 		pGrid->Tile[i][j].AdjacentMines = GetNeighbour(pGrid, i,j);
@@ -284,68 +311,79 @@ int COLORS[] = { CYAN, DARKBLUE, DARKBLUE, YELLOW, YELLOW, PINK, PINK, RED};
 	}
 
 	
+	void LaunchGame(Grid* pGrid, HANDLE hConsole) 
+	{
+		BOOL2 FirstInput = TRUE;
+		while(1)
+		{ 
+			PrintGrid(pGrid, TRUE);
+
+			SetConsoleTextAttribute(hConsole, WHITE);
+			int UserChoice = AskIntBetween("\nChoisissez la case que vous voulez réveler", 0, pow(pGrid->Size, 2) - 1);
+			int iUser = UserChoice / pGrid->Size;
+			int jUser = UserChoice % pGrid->Size;
+
+			if (pGrid->Tile[iUser][jUser].IsFlag == TRUE) {
+				int RmFlag = AskIntBetween("Que voulez vous faire sur ce drapeau? (0: Annuler la sélection, 1: Réveler, 2: Enlever le drapeau", 0, 2);
+				
+				if (RmFlag == 0)
+					continue;
+				
+				pGrid->Tile[iUser][jUser].IsFlag = FALSE;
+
+				if (RmFlag == 2)
+					continue;
+			}
+			else 
+			{
+				int Choice = AskIntBetween("\n Que voulez-vous faire avec cette case ? (0: Reveler, 1:Mettre un drapeau, 2:Annuler la selection)", 0, 2);
+				
+				if (Choice == 2)
+					continue;
+
+				if (Choice == 1) 
+				{
+					pGrid->Tile[iUser][jUser].IsFlag = TRUE;
+					continue;
+				}
+			}
+			
+			if (FirstInput == TRUE) {
+				int bomb_amount = GenerateBomb(pGrid, iUser, jUser);
+				pGrid->remainingTiles = pow(pGrid->Size, 2) - bomb_amount;
+				FirstInput = FALSE;
+			}
+
+			if (pGrid->Tile[iUser][jUser].IsMined == TRUE) {
+				PrintGrid(pGrid, TRUE);
+				SetConsoleTextAttribute(hConsole, 15);
+				printf("\nVous avez perdu !");
+
+				return;
+			}
+
+			UpdateGrid(pGrid, iUser, jUser);
+			if (CheckWin(pGrid) == TRUE) {
+				PrintGrid(pGrid, TRUE);
+				printf("Bravo vous avez gagne !");
+				return;
+			}
+
+			pGrid->Tile[iUser][jUser].AdjacentMines = GetNeighbour(pGrid, iUser, jUser);
+		}
+	}
 
 	int main() {
 		
 		char replay = 'y';
+		srand(time(NULL));
+
 		do {
 			HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-			srand(time(NULL));
 			Grid grid;
 			Grid* pGrid = &grid;
 			InitGrid(pGrid);
-			do { //launch game
-				system("cls");
-				PrintGrid(pGrid, TRUE);
-				SetConsoleTextAttribute(hConsole, WHITE);
-				int UserChoice = AskIntBetween("\nChoisissez la case que vous voulez réveler", 0, pow(pGrid->Size, 2) - 1);
-				int iUser = UserChoice / pGrid->Size;
-				int jUser = UserChoice % pGrid->Size;
-
-				if (pGrid->Tile[iUser][jUser].IsFlag == TRUE) {
-					int RmFlag = AskIntBetween("Que voulez vous faire sur ce drapeau? (0: Annuler la sélection, 1: Réveler, 2: Enlever le drapeau", 0, 2);
-					if (RmFlag == 1) {
-						pGrid->Tile[iUser][jUser].IsFlag = FALSE;
-						UpdateGrid(pGrid, iUser, jUser);
-						pGrid->Tile[iUser][jUser].AdjacentMines = GetNeighbour(pGrid, iUser, jUser);
-					}
-					else if (RmFlag == 2) {
-						pGrid->Tile[iUser][jUser].IsFlag = FALSE;
-					}
-				}
-				else {
-					int Choice = AskIntBetween("\n Que voulez-vous faire avec cette case ? (0: Reveler, 1:Mettre un drapeau, 2:Anuler la selection)", 0, 2);
-
-
-					if (Choice == 0)
-					{
-						if (pGrid->Tile[iUser][jUser].IsMined == TRUE) {
-							system("cls");
-							PrintGrid(pGrid, TRUE);
-							SetConsoleTextAttribute(hConsole, 15);
-							printf("\nVous avez perdu !");
-							break;
-						}
-
-
-
-						UpdateGrid(pGrid, iUser,jUser);
-						if (CheckWin(pGrid) == TRUE) {
-							system("cls");
-							PrintGrid(pGrid, TRUE);
-							printf("Bravo vous avez gagne !");
-							break;
-						}
-						pGrid->Tile[iUser][jUser].AdjacentMines = GetNeighbour(pGrid, iUser, jUser);
-					}
-					else if (Choice == 1) {
-						pGrid->Tile[iUser][jUser].IsFlag = TRUE;
-					}
-				}
-
-
-
-			} while (1);
+			LaunchGame(pGrid, hConsole);
 			replay = AskChar("\nVoulez vous rejouer ?", "YyNn");
 		} while (replay == 'y' || replay == 'Y');
 		
