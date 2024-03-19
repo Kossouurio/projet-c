@@ -11,7 +11,16 @@ typedef char BOOL2;
 #define TRUE 1
 #define FALSE 0
 
-//#TODO GENERAL Envoie en Grid* ou  const Grid*
+#define CYAN 11
+#define DARKBLUE 9
+#define YELLOW 14
+#define PINK 13
+#define RED 12
+#define WHITE 15
+
+
+
+int COLORS[] = { CYAN, DARKBLUE, DARKBLUE, YELLOW, YELLOW, PINK, PINK, RED};
 
 
 	int AskInt(const char text[]) {
@@ -112,74 +121,48 @@ typedef char BOOL2;
 	typedef struct Grid {
 		int Size;
 		Tile** Tile; //tablau a deux dimensions
+		int remainingTiles;
 
 	} Grid;
  
-	void PrintGrid(Grid grid, BOOL2 ShowBomb) {
+	void PrintGrid(Grid* pGrid, BOOL2 ShowBomb) {
 		HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-		for (int i = 0; i < grid.Size; i++) { //lignes
+		for (int i = 0; i < pGrid->Size; i++) { //lignes
 			printf("\n"); //saut de ligne
-			for (int j = 0; j < grid.Size; j++) { //colonnes
-				if (grid.Tile[i][j].IsRevealed == FALSE)
+			for (int j = 0; j < pGrid->Size; j++) { //colonnes
+				if (pGrid->Tile[i][j].IsRevealed == FALSE)
 				{
-					if (grid.Tile[i][j].IsMined == TRUE && ShowBomb == TRUE) {
+					if (pGrid->Tile[i][j].IsMined == TRUE && ShowBomb == TRUE) {
 							SetConsoleTextAttribute(hConsole,FOREGROUND_RED);
 							printf("|X |");
 					}
-					else if (grid.Tile[i][j].IsFlag == TRUE) {
-						SetConsoleTextAttribute(hConsole, 12);
-						printf("|F%d |", grid.Tile[i][j].Value);
+					else if (pGrid->Tile[i][j].IsFlag == TRUE) {
+						SetConsoleTextAttribute(hConsole, RED);
+						printf("|F%d |", pGrid->Tile[i][j].Value);
 					}
-					//#TODO init Value qu'une seule fois
 					else {
-						grid.Tile[i][j].Value = i * grid.Size + j;
-						if (grid.Tile[i][j].Value <= 9) {
-							SetConsoleTextAttribute(hConsole, 15);
-							printf("|%d |", grid.Tile[i][j].Value);
+						if (pGrid->Tile[i][j].Value <= 9) {
+							SetConsoleTextAttribute(hConsole, WHITE);
+							printf("|%d |", pGrid->Tile[i][j].Value);
 						}
 						else {
-							SetConsoleTextAttribute(hConsole, 15);
-							printf("|%d|", grid.Tile[i][j].Value);
+							SetConsoleTextAttribute(hConsole, WHITE);
+							printf("|%d|", pGrid->Tile[i][j].Value);
 						}
 					}
 				}
 				else {
-
-					//#TODO mettre dans un tableau les couleurs
-
-					//Texte des mines adjacentes
-					if (grid.Tile[i][j].AdjacentMines == 0) {
-						SetConsoleTextAttribute(hConsole, 11);
-						printf("|%d |", grid.Tile[i][j].AdjacentMines);
-					}
-					else if (grid.Tile[i][j].AdjacentMines <= 2) {
-						SetConsoleTextAttribute(hConsole, 9);
-						printf("|%d |", grid.Tile[i][j].AdjacentMines);
-					}
-					else if (grid.Tile[i][j].AdjacentMines <= 4) {
-						SetConsoleTextAttribute(hConsole, 14);
-						printf("|%d |", grid.Tile[i][j].AdjacentMines);
-					} 
-					else if (grid.Tile[i][j].AdjacentMines <= 6) {
-						SetConsoleTextAttribute(hConsole, 13);
-						printf("|%d |", grid.Tile[i][j].AdjacentMines);
-					}
-					else if (grid.Tile[i][j].AdjacentMines == 7) {
-						SetConsoleTextAttribute(hConsole, 12);
-						printf("|%d |", grid.Tile[i][j].AdjacentMines);
-					}
-					else {
-						
-					}
+					SetConsoleTextAttribute(hConsole, COLORS[pGrid->Tile[i][j].AdjacentMines ]);
+					printf("|%d |", pGrid->Tile[i][j].AdjacentMines);
 				}
 				
 			}
 		}
 	}
-	void GenerateBomb(Grid grid) {
+	int GenerateBomb(Grid* pGrid) {
 		system("cls");
-		int bomb_amount = pow(grid.Size, 2) * 0.2;
-		int size = pow(grid.Size,2);
+		int bomb_amount = pow(pGrid->Size, 2) * 0.2;
+		int size = pow(pGrid->Size,2);
 		int* all_index = (int*)malloc(sizeof(int) * size);
 		if (all_index == NULL) 
 		{
@@ -198,7 +181,7 @@ typedef char BOOL2;
 			int tile_index = all_index[index];
 
 
-			grid.Tile[tile_index / grid.Size][tile_index % grid.Size].IsMined = TRUE;
+			pGrid->Tile[tile_index / pGrid->Size][tile_index % pGrid->Size].IsMined = TRUE;
 
 			int temp = all_index[size - 1];
 			all_index[size - 1] = tile_index;
@@ -208,48 +191,60 @@ typedef char BOOL2;
 		}
 
 		free(all_index);
+		return bomb_amount;
 	}
 
-	BOOL2 InGrid(int i, int j,Grid grid) {
-		if (i < 0 || j < 0 || i >= grid.Size || j >= grid.Size ) {
+
+
+	BOOL2 InGrid(int i, int j,Grid* pGrid) {
+		if (i < 0 || j < 0 || i >= pGrid->Size || j >= pGrid->Size) {
 			return FALSE;
 		}
 
 		return TRUE;
 	}
 
-	Grid GenerateGrid() {
-		Grid grid;
-		grid.Size = AskInt("Rentrez la taille de la grille sur laquelle vous voulez jouer : ");
+	void InitGrid(Grid* pGrid) {
+		pGrid->Size = AskInt("Rentrez la taille de la grille sur laquelle vous voulez jouer : ");
+		
 
-		grid.Tile = (Tile**)malloc(sizeof(Tile*) * grid.Size);
+		pGrid->Tile = (Tile**)malloc(sizeof(Tile*) * pGrid->Size);
+
+		if (pGrid->Tile == NULL) {
+			exit(1);
+		}
 
 		//Allocation de la mémoire pour chaque case
-		for (int i = 0; i < grid.Size; i++)
+		for (int i = 0; i < pGrid->Size; i++)
 		{
-			grid.Tile[i] = (Tile*)malloc(grid.Size * sizeof(Tile));
+			pGrid->Tile[i] = (Tile*)malloc(pGrid->Size * sizeof(Tile));
+			if (pGrid->Tile == NULL) {
+				exit(1);
+			}
 		}
 
 		//Initialisation des Tile
-		for (int i = 0; i < grid.Size; i++)
+		for (int i = 0; i < pGrid->Size; i++)
 		{
-			for (int j = 0; j < grid.Size; j++)
+			for (int j = 0; j < pGrid->Size; j++)
 			{
-				grid.Tile[i][j].x = i;
-				grid.Tile[i][j].y = j;
-				grid.Tile[i][j].IsRevealed = FALSE;
+				pGrid->Tile[i][j].x = i;
+				pGrid->Tile[i][j].y = j;
+				pGrid->Tile[i][j].IsRevealed = FALSE;
+				pGrid->Tile[i][j].Value = i * pGrid->Size + j;
 			}
 		}
-		return grid;
+		int bomb_amount = GenerateBomb(pGrid);
+		pGrid->remainingTiles = pow(pGrid->Size, 2) - bomb_amount;
 	}
 
 
-	int GetNeighbour(Grid grid, int i, int j) {
+	int GetNeighbour(Grid* pGrid, int i, int j) {
 		int Neighbour = 0;
 		for (int Currenti = i - 1; Currenti <= i + 1; Currenti++) {
 			for (int Currentj = j - 1; Currentj <= j + 1; Currentj++) {
-				if (InGrid(Currenti, Currentj, grid) == TRUE) {
-					if (grid.Tile[Currenti][Currentj].IsMined == TRUE) {
+				if (InGrid(Currenti, Currentj, pGrid) == TRUE) {
+					if (pGrid->Tile[Currenti][Currentj].IsMined == TRUE) {
 						Neighbour++;
 					}
 				}
@@ -258,40 +253,32 @@ typedef char BOOL2;
 		return Neighbour;
 	}
 
-	void UpdateGrid(Grid grid, int userchoice)
+	void UpdateGrid(Grid* pGrid, int i, int j)
 	{
-		grid.Tile[userchoice / grid.Size][userchoice % grid.Size].IsRevealed = TRUE;
-		grid.Tile[userchoice / grid.Size][userchoice % grid.Size].AdjacentMines = GetNeighbour(grid, userchoice / grid.Size, userchoice % grid.Size);
 
-		if (GetNeighbour(grid, userchoice / grid.Size, userchoice % grid.Size) == 0) {
-			for (int i = userchoice / grid.Size - 1; i <= userchoice / grid.Size + 1; i++) {
-				for (int j = userchoice % grid.Size - 1; j <= userchoice % grid.Size + 1; j++) {
-					if (InGrid(i, j, grid)) {
-						if (grid.Tile[i][j].IsRevealed == FALSE) {
 
-							UpdateGrid(grid, i * 10 + j);
+		pGrid->Tile[i][j].IsRevealed = TRUE;
+		pGrid->remainingTiles--;
+		pGrid->Tile[i][j].AdjacentMines = GetNeighbour(pGrid, i,j);
+
+		if (GetNeighbour(pGrid, i, j) == 0) {
+			for (int x = i - 1; x <= i + 1; x++) {
+				for (int y = j - 1; y <= j + 1; y++) {
+					if (InGrid(x, y, pGrid)) {
+						if (pGrid->Tile[x][y].IsRevealed == FALSE  /* && pGrid->Tile[i][j].IsFlag == FALSE*/) {
+
+							 UpdateGrid(pGrid, x ,y) ;
 
 						}
 					}
 				}
 			}
 		}
-
-		
 	}
 
-	//#TODO faire une méthode + opti
-	BOOL2 CheckWin(Grid grid) {
-		int count = 0;
-		for (int i = 0; i < grid.Size; i++) {
-			for (int j = 0; j < grid.Size; j++) {
-				if (grid.Tile[i][j].IsRevealed == TRUE || grid.Tile[i][j].IsMined == TRUE) {
-					count++;
-					if (count == pow(grid.Size, 2)) {
-						return TRUE;
-					}
-				}
-			}
+	BOOL2 CheckWin(Grid* pGrid) {
+		if (pGrid->remainingTiles == 0) {
+			return TRUE;
 		}
 		return FALSE;
 	}
@@ -304,36 +291,37 @@ typedef char BOOL2;
 		do {
 			HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 			srand(time(NULL));
-			Grid grid = GenerateGrid();
-			GenerateBomb(grid);
-			do {
+			Grid grid;
+			Grid* pGrid = &grid;
+			InitGrid(pGrid);
+			do { //launch game
 				system("cls");
-				PrintGrid(grid, FALSE);
+				PrintGrid(pGrid, TRUE);
+				SetConsoleTextAttribute(hConsole, WHITE);
+				int UserChoice = AskIntBetween("\nChoisissez la case que vous voulez réveler", 0, pow(pGrid->Size, 2) - 1);
+				int iUser = UserChoice / pGrid->Size;
+				int jUser = UserChoice % pGrid->Size;
 
-				SetConsoleTextAttribute(hConsole, 15);
-				int UserChoice = AskIntBetween("\nChoisissez la case que vous voulez réveler", 0, pow(grid.Size, 2) - 1);
-				int iUser = UserChoice / grid.Size;
-				int jUser = UserChoice % grid.Size;
-
-				if (grid.Tile[iUser][jUser].IsFlag == TRUE) {
+				if (pGrid->Tile[iUser][jUser].IsFlag == TRUE) {
 					int RmFlag = AskIntBetween("Que voulez vous faire sur ce drapeau? (0: Annuler la sélection, 1: Réveler, 2: Enlever le drapeau", 0, 2);
 					if (RmFlag == 1) {
-						grid.Tile[iUser][jUser].IsFlag = FALSE;
-						UpdateGrid(grid, UserChoice);
-						grid.Tile[iUser][jUser].AdjacentMines = GetNeighbour(grid, iUser, jUser);
+						pGrid->Tile[iUser][jUser].IsFlag = FALSE;
+						UpdateGrid(pGrid, iUser, jUser);
+						pGrid->Tile[iUser][jUser].AdjacentMines = GetNeighbour(pGrid, iUser, jUser);
 					}
 					else if (RmFlag == 2) {
-						grid.Tile[iUser][jUser].IsFlag = FALSE;
+						pGrid->Tile[iUser][jUser].IsFlag = FALSE;
 					}
 				}
 				else {
 					int Choice = AskIntBetween("\n Que voulez-vous faire avec cette case ? (0: Reveler, 1:Mettre un drapeau, 2:Anuler la selection)", 0, 2);
 
+
 					if (Choice == 0)
 					{
-						if (grid.Tile[iUser][jUser].IsMined == TRUE) {
+						if (pGrid->Tile[iUser][jUser].IsMined == TRUE) {
 							system("cls");
-							PrintGrid(grid, TRUE);
+							PrintGrid(pGrid, TRUE);
 							SetConsoleTextAttribute(hConsole, 15);
 							printf("\nVous avez perdu !");
 							break;
@@ -341,15 +329,17 @@ typedef char BOOL2;
 
 
 
-						UpdateGrid(grid, UserChoice);
-						if (CheckWin(grid) == TRUE) {
+						UpdateGrid(pGrid, iUser,jUser);
+						if (CheckWin(pGrid) == TRUE) {
+							system("cls");
+							PrintGrid(pGrid, TRUE);
 							printf("Bravo vous avez gagne !");
 							break;
 						}
-						grid.Tile[iUser][jUser].AdjacentMines = GetNeighbour(grid, iUser, jUser);
+						pGrid->Tile[iUser][jUser].AdjacentMines = GetNeighbour(pGrid, iUser, jUser);
 					}
 					else if (Choice == 1) {
-						grid.Tile[iUser][jUser].IsFlag = TRUE;
+						pGrid->Tile[iUser][jUser].IsFlag = TRUE;
 					}
 				}
 
