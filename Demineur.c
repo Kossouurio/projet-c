@@ -20,9 +20,7 @@ typedef char BOOL2;
 #define RED 12
 #define WHITE 15
 
-
-
-int COLORS[] = { CYAN, DARKBLUE, DARKBLUE, YELLOW, YELLOW, PINK, PINK, RED};
+int COLORS[] = { CYAN, DARKBLUE, DARKBLUE, YELLOW, YELLOW, PINK, PINK, RED };
 
 
 	int AskInt(const char text[]) {
@@ -44,7 +42,7 @@ int COLORS[] = { CYAN, DARKBLUE, DARKBLUE, YELLOW, YELLOW, PINK, PINK, RED};
 		return num;
 	}
 
-	int get_length(const char* str)
+	int GetLength(const char* str)
 	{
 		int i = 0;
 		while (str[i] != '\0') {
@@ -53,7 +51,6 @@ int COLORS[] = { CYAN, DARKBLUE, DARKBLUE, YELLOW, YELLOW, PINK, PINK, RED};
 		return i;
 	}
 
-
 	char AskChar(const char text[], const char ValidChar[]) {
 		char charinput;
 
@@ -61,16 +58,16 @@ int COLORS[] = { CYAN, DARKBLUE, DARKBLUE, YELLOW, YELLOW, PINK, PINK, RED};
 			printf("%s (Reponses valides : ", text);
 
 			printf("(");
-			for (int i = 0; i < get_length(ValidChar) - 1; ++i)
+			for (int i = 0; i < GetLength(ValidChar) - 1; ++i)
 			{
 				printf("%c,", ValidChar[i]);
 			}
-			printf("%c)\n", ValidChar[get_length(ValidChar) - 1]);
+			printf("%c)\n", ValidChar[GetLength(ValidChar) - 1]);
 
 			int ret = scanf_s("%c", &charinput, 1);
 			while (getchar() != '\n');
 
-			for (int i = 0; i < get_length(ValidChar); i++) {
+			for (int i = 0; i < GetLength(ValidChar); i++) {
 				if (charinput == ValidChar[i]) {
 					return charinput;
 				}
@@ -78,11 +75,11 @@ int COLORS[] = { CYAN, DARKBLUE, DARKBLUE, YELLOW, YELLOW, PINK, PINK, RED};
 
 			printf("Merci de rentrer uniquement des caractères contenus dans cette liste :");
 			printf("(");
-			for (int i = 0; i < get_length(ValidChar) - 1; ++i)
+			for (int i = 0; i < GetLength(ValidChar) - 1; ++i)
 			{
 				printf("%c,", ValidChar[i]);
 			}
-			printf("%c)\n", ValidChar[get_length(ValidChar) - 1]);
+			printf("%c)\n", ValidChar[GetLength(ValidChar) - 1]);
 		}
 	}
 
@@ -121,70 +118,111 @@ int COLORS[] = { CYAN, DARKBLUE, DARKBLUE, YELLOW, YELLOW, PINK, PINK, RED};
 	} Tile;
 
 	typedef struct Grid {
-		int Size;
-		Tile** Tile; //tablau a deux dimensions
-		int remainingTiles;
-		char Difficulty;
+		int size;
+		Tile** tile; 
+		int remainingtiles;
+		char difficulty;
 	} Grid;
  
+	BOOL2 InGrid(int i, int j, Grid* pGrid) {
+		if (i < 0 || j < 0 || i >= pGrid->size || j >= pGrid->size) {
+			return FALSE;
+		}
+
+		return TRUE;
+	}
+
+	Tile* GetTile(Grid* pGrid, int i, int j) {
+		if (InGrid(i, j, pGrid)) {
+			return &pGrid->tile[i][j];
+		}
+		return NULL;
+	}
+
 	void PrintGrid(Grid* pGrid, BOOL2 ShowBomb) {
 		system("cls");
+		BOOL2 IsEight = FALSE;
 		HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-		for (int i = 0; i < pGrid->Size; i++) { 
+		for (int i = 0; i < pGrid->size; i++) { 
 			printf("\n"); 
-			for (int j = 0; j < pGrid->Size; j++) {
+			for (int j = 0; j < pGrid->size; j++) {
+				Tile* Currenttile = GetTile(pGrid, i, j);
+				if (Currenttile == NULL) {
+					continue;
+				}
 
 				//Si la case est cachée
-				if (pGrid->Tile[i][j].IsRevealed == FALSE)
+				if (Currenttile->IsRevealed == FALSE)
 				{
-					if (pGrid->Tile[i][j].IsMined == TRUE && ShowBomb == TRUE) {
-							SetConsoleTextAttribute(hConsole,FOREGROUND_RED);
-							printf("|X |");
+					if (Currenttile->IsMined == TRUE && ShowBomb == TRUE) {
+						SetConsoleTextAttribute(hConsole,FOREGROUND_RED);
+						printf("| X |");
 					}
-					else if (pGrid->Tile[i][j].IsFlag == TRUE) {
-						if (pGrid->Tile[i][j].Value <= 9) {
-							SetConsoleTextAttribute(hConsole, RED);
-							printf("|%d |", pGrid->Tile[i][j].Value);
-						}
-						else {
-							SetConsoleTextAttribute(hConsole, RED);
-							printf("|%d|", pGrid->Tile[i][j].Value);
-						}
+					else if (Currenttile->IsFlag == TRUE) {
+						SetConsoleTextAttribute(hConsole, RED);
+						printf("|%3d|", pGrid->tile[i][j].Value);
 					}
 					else {
-						if (pGrid->Tile[i][j].Value <= 9) {
-							SetConsoleTextAttribute(hConsole, WHITE);
-							printf("|%d |", pGrid->Tile[i][j].Value);
-						}
-						else {
-							SetConsoleTextAttribute(hConsole, WHITE);
-							printf("|%d|", pGrid->Tile[i][j].Value);
-						}
+						SetConsoleTextAttribute(hConsole, WHITE);
+						printf("|%3d|", pGrid->tile[i][j].Value);	
 					}
 				}
 				//Si la	case est révelée alors afficher le nombre de bombes adjacentes
+				else if (Currenttile->AdjacentMines <= 7){
+					SetConsoleTextAttribute(hConsole, COLORS[Currenttile->AdjacentMines ]);
+					printf("|%d  |", Currenttile->AdjacentMines);
+				}
 				else {
-					SetConsoleTextAttribute(hConsole, COLORS[pGrid->Tile[i][j].AdjacentMines ]);
-					printf("|%d |", pGrid->Tile[i][j].AdjacentMines);
+					SetConsoleTextAttribute(hConsole, 75);
+					printf("|%d  |", Currenttile->AdjacentMines);
+					IsEight = TRUE;
+
 				}
 				
 			}
 		}
+		if (IsEight == TRUE) {
+			FILE* fptr = NULL;
+			SetConsoleTextAttribute(hConsole, WHITE);
+			int success = fopen_s(&fptr, "C:/Users/tzocca/source/repos/Plusoumoins/Plusoumoins/message.txt", "r");
+			if (success == 0) {
+				printf("\n");
+				while (1)
+				{
+					char c = fgetc(fptr);
+					if (c == EOF)
+						break;
+
+					printf("%c", c);
+				}
+				fclose(fptr);
+			}
+		}
 	}
+
+	int GetRand(int min, int max) {
+		if (min == 0 && max == 0) {
+			return rand() % 1;
+		}
+		return rand() % (max - min) + min;
+	}
+
 	int GenerateBomb(Grid* pGrid, int iFirst, int jFirst) {
 		system("cls");
 		float BombRatio;
-		if (pGrid->Difficulty == 'E' || pGrid->Difficulty == 'e') {
+		if (pGrid->difficulty == 'E' || pGrid->difficulty == 'e') {
 			BombRatio = 0.2;
 		}
-		else if (pGrid->Difficulty == 'M' || pGrid->Difficulty == 'm') {
-			BombRatio = 0.35;
+		else if (pGrid->difficulty == 'M' || pGrid->difficulty == 'm') {
+			BombRatio = 0.25;
 		}
 		else {
-			BombRatio = 0.4;
+			BombRatio = 0.3;
 		}
-		int bomb_amount = pow(pGrid->Size, 2) * BombRatio;
-		int size = pow(pGrid->Size,2);
+		int bomb_amount = pGrid->size * pGrid->size * BombRatio;
+		int size = pGrid->size * pGrid->size;
+		int MinOffset = size / 45;
+		int MaxOffset = size / 30;
 		int* all_index = (int*)malloc(sizeof(int) * size);
 		if (all_index == NULL) 
 		{
@@ -192,15 +230,25 @@ int COLORS[] = { CYAN, DARKBLUE, DARKBLUE, YELLOW, YELLOW, PINK, PINK, RED};
 		}
 
 		int index1 = 0;
-		for (int i = 0; i < size; i++) {
-				all_index[index1] = i;
-				index1++;
-			}
+		for (int i = 0; i < size; i++) 
+		{
+			all_index[index1] = i;
+			index1++;
+		}
 
-		for (int Currenti = iFirst - 1; Currenti <= iFirst + 1; Currenti++) {
-			for (int Currentj = jFirst - 1; Currentj <= jFirst + 1; Currentj++) 
+
+		int offseti = GetRand(MinOffset, MaxOffset);
+		int offsetj = GetRand(MinOffset, MaxOffset);
+
+
+		for (int Currenti = iFirst - 1; Currenti <= iFirst + 1 + offseti; Currenti++) {
+			for (int Currentj = jFirst - 1; Currentj <= jFirst + 1 + offsetj; Currentj++)
 			{
-				int RmValue = Currenti * 10 + Currentj;
+				Tile* tile = GetTile(pGrid, Currenti, Currentj);
+				if (tile == NULL)
+					continue;
+
+				int RmValue = Currenti * pGrid->size + Currentj;
 				all_index[RmValue] = all_index[size - 1];
 				size--;
 			}
@@ -208,74 +256,74 @@ int COLORS[] = { CYAN, DARKBLUE, DARKBLUE, YELLOW, YELLOW, PINK, PINK, RED};
 
 		for (int i = 0; i < bomb_amount; i++)
 		{
-			int index = rand() % size;
-			int tile_index = all_index[index];
+			int random_index = rand() % size;
+			int tile_index = all_index[random_index];
 
+			int x = tile_index / pGrid->size;
+			int y = tile_index % pGrid->size;
 
-			pGrid->Tile[tile_index / pGrid->Size][tile_index % pGrid->Size].IsMined = TRUE;
+			Tile* tile = GetTile(pGrid, x, y);
 
-			all_index[tile_index] = all_index[size - 1];
+			tile->IsMined = TRUE;
+
+			all_index[random_index] = all_index[size - 1];
 
 			size--;
 		}
 
 		free(all_index);
+
 		return bomb_amount;
 	}
 
-
-
-	BOOL2 InGrid(int i, int j,Grid* pGrid) {
-		if (i < 0 || j < 0 || i >= pGrid->Size || j >= pGrid->Size) {
-			return FALSE;
-		}
-
-		return TRUE;
-	}
-
 	void InitGrid(Grid* pGrid) {
-		pGrid->Size = AskInt("Rentrez la taille de la grille sur laquelle vous voulez jouer : ");
-		pGrid->Difficulty = AskChar("Dans quelle difficulte voulez vous jouer ? (E pour Easy, M pour Medium, H pour Hard", "EeMmHh");
+		pGrid->size = AskIntBetween("Rentrez la taille de la grille sur laquelle vous voulez jouer : ",5,24);
+		pGrid->difficulty = AskChar("Dans quelle difficulte voulez vous jouer ? (E pour Easy, M pour Medium, H pour Hard", "EeMmHh");
 		
 
-		pGrid->Tile = (Tile**)malloc(sizeof(Tile*) * pGrid->Size);
+		pGrid->tile = (Tile**)malloc(sizeof(Tile*) * pGrid->size);
 
-		if (pGrid->Tile == NULL) {
+		if (pGrid->tile == NULL) {
 			exit(1);
 		}
 
 		//Allocation de la mémoire pour chaque case
-		for (int i = 0; i < pGrid->Size; i++)
+		for (int i = 0; i < pGrid->size; i++)
 		{
-			pGrid->Tile[i] = (Tile*)malloc(pGrid->Size * sizeof(Tile));
-			if (pGrid->Tile == NULL) {
+			pGrid->tile[i] = (Tile*)malloc(pGrid->size * sizeof(Tile));
+			if (pGrid->tile == NULL) {
 				exit(1);
 			}
 		}
 
 		//Initialisation des Tile
-		for (int i = 0; i < pGrid->Size; i++)
+		for (int i = 0; i < pGrid->size; i++)
 		{
-			for (int j = 0; j < pGrid->Size; j++)
+			for (int j = 0; j < pGrid->size; j++)
 			{
-				pGrid->Tile[i][j].x = i;
-				pGrid->Tile[i][j].y = j;
-				pGrid->Tile[i][j].IsRevealed = FALSE;
-				pGrid->Tile[i][j].Value = i * pGrid->Size + j;
+				Tile* tile = GetTile(pGrid, i, j);
+
+				tile->x = i;
+				tile->y = j;
+				tile->IsRevealed = FALSE;
+				tile->Value = i * pGrid->size + j;
+				tile->IsMined = FALSE;
+				tile->IsFlag = FALSE;
 			}
 		}
-
 	}
-
 
 	int GetNeighbour(Grid* pGrid, int i, int j) {
 		int Neighbour = 0;
 		for (int Currenti = i - 1; Currenti <= i + 1; Currenti++) {
 			for (int Currentj = j - 1; Currentj <= j + 1; Currentj++) {
-				if (InGrid(Currenti, Currentj, pGrid) == TRUE) {
-					if (pGrid->Tile[Currenti][Currentj].IsMined == TRUE) {
-						Neighbour++;
-					}
+				Tile* tile = GetTile(pGrid, Currenti, Currentj);
+				if (tile == NULL)
+					continue;
+
+				if (tile->IsMined) 
+				{
+					Neighbour++;
 				}
 			}
 		}
@@ -284,52 +332,57 @@ int COLORS[] = { CYAN, DARKBLUE, DARKBLUE, YELLOW, YELLOW, PINK, PINK, RED};
 
 	void UpdateGrid(Grid* pGrid, int i, int j)
 	{
-		pGrid->Tile[i][j].IsRevealed = TRUE;
-		pGrid->remainingTiles--;
-		pGrid->Tile[i][j].AdjacentMines = GetNeighbour(pGrid, i,j);
+		Tile* tile = GetTile(pGrid, i, j);
+		if (tile == NULL)
+			return;
 
-		if (GetNeighbour(pGrid, i, j) == 0) {
-			for (int x = i - 1; x <= i + 1; x++) {
-				for (int y = j - 1; y <= j + 1; y++) {
-					if (InGrid(x, y, pGrid)) {
-						if (pGrid->Tile[x][y].IsRevealed == FALSE  /* && pGrid->Tile[i][j].IsFlag == FALSE*/) {
+		if (tile->IsRevealed)
+			return;
 
-							 UpdateGrid(pGrid, x ,y) ;
+		tile->IsRevealed = TRUE;
+		pGrid->remainingtiles--;
 
-						}
-					}
-				}
+		tile->AdjacentMines = GetNeighbour(pGrid, i, j);
+
+		if (tile->AdjacentMines > 0)
+			return;
+
+		for (int x = i - 1; x <= i + 1; x++) {
+			for (int y = j - 1; y <= j + 1; y++) {
+				UpdateGrid(pGrid, x, y);
 			}
 		}
 	}
 
-	BOOL2 CheckWin(Grid* pGrid) {
-		if (pGrid->remainingTiles == 0) {
+	BOOL2 CheckWin(const Grid* pGrid) {
+		if (pGrid->remainingtiles == 0) {
 			return TRUE;
 		}
 		return FALSE;
 	}
 
-	
-	void LaunchGame(Grid* pGrid, HANDLE hConsole) 
+	void LaunchGame(Grid* pGrid) 
 	{
 		BOOL2 FirstInput = TRUE;
+		HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 		while(1)
 		{ 
 			PrintGrid(pGrid, TRUE);
 
 			SetConsoleTextAttribute(hConsole, WHITE);
-			int UserChoice = AskIntBetween("\nChoisissez la case que vous voulez réveler", 0, pow(pGrid->Size, 2) - 1);
-			int iUser = UserChoice / pGrid->Size;
-			int jUser = UserChoice % pGrid->Size;
+			int UserChoice = AskIntBetween("\nChoisissez la case que vous voulez reveler", 0, pow(pGrid->size, 2) - 1);
+			int iUser = UserChoice / pGrid->size;
+			int jUser = UserChoice % pGrid->size;
 
-			if (pGrid->Tile[iUser][jUser].IsFlag == TRUE) {
-				int RmFlag = AskIntBetween("Que voulez vous faire sur ce drapeau? (0: Annuler la sélection, 1: Réveler, 2: Enlever le drapeau", 0, 2);
+			Tile* tile = GetTile(pGrid, iUser, jUser);
+
+			if (tile->IsFlag == TRUE) {
+				int RmFlag = AskIntBetween("Que voulez vous faire sur ce drapeau? (0: Annuler la selection, 1: Reveler, 2: Enlever le drapeau", 0, 2);
 				
 				if (RmFlag == 0)
 					continue;
 				
-				pGrid->Tile[iUser][jUser].IsFlag = FALSE;
+				tile->IsFlag = FALSE;
 
 				if (RmFlag == 2)
 					continue;
@@ -343,18 +396,24 @@ int COLORS[] = { CYAN, DARKBLUE, DARKBLUE, YELLOW, YELLOW, PINK, PINK, RED};
 
 				if (Choice == 1) 
 				{
-					pGrid->Tile[iUser][jUser].IsFlag = TRUE;
+					tile->IsFlag = TRUE;
+					if (CheckWin(pGrid) == TRUE) {
+						PrintGrid(pGrid, TRUE);
+						SetConsoleTextAttribute(hConsole, WHITE);
+						printf("\nBravo vous avez gagne !");
+						return;
+					}
 					continue;
 				}
 			}
 			
 			if (FirstInput == TRUE) {
 				int bomb_amount = GenerateBomb(pGrid, iUser, jUser);
-				pGrid->remainingTiles = pow(pGrid->Size, 2) - bomb_amount;
+				pGrid->remainingtiles = pow(pGrid->size, 2) - bomb_amount;
 				FirstInput = FALSE;
 			}
 
-			if (pGrid->Tile[iUser][jUser].IsMined == TRUE) {
+			if (tile->IsMined == TRUE) {
 				PrintGrid(pGrid, TRUE);
 				SetConsoleTextAttribute(hConsole, 15);
 				printf("\nVous avez perdu !");
@@ -365,11 +424,12 @@ int COLORS[] = { CYAN, DARKBLUE, DARKBLUE, YELLOW, YELLOW, PINK, PINK, RED};
 			UpdateGrid(pGrid, iUser, jUser);
 			if (CheckWin(pGrid) == TRUE) {
 				PrintGrid(pGrid, TRUE);
-				printf("Bravo vous avez gagne !");
+				SetConsoleTextAttribute(hConsole, WHITE);
+				printf("\nBravo vous avez gagne !");
 				return;
 			}
 
-			pGrid->Tile[iUser][jUser].AdjacentMines = GetNeighbour(pGrid, iUser, jUser);
+			tile->AdjacentMines = GetNeighbour(pGrid, iUser, jUser);
 		}
 	}
 
@@ -379,11 +439,9 @@ int COLORS[] = { CYAN, DARKBLUE, DARKBLUE, YELLOW, YELLOW, PINK, PINK, RED};
 		srand(time(NULL));
 
 		do {
-			HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 			Grid grid;
-			Grid* pGrid = &grid;
-			InitGrid(pGrid);
-			LaunchGame(pGrid, hConsole);
+			InitGrid(&grid);
+			LaunchGame(&grid);
 			replay = AskChar("\nVoulez vous rejouer ?", "YyNn");
 		} while (replay == 'y' || replay == 'Y');
 		
