@@ -1,28 +1,35 @@
+// Last update: 2021-10-14 20:00
+#include <windows.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include <windows.h>
+#include <math.h>
 
+#define UNICODE
+#define _UNICODE
 typedef char BooL;
 #define TRUE 1
 #define FALSE 0
 
-typedef struct Tile
+//#TODO passage par adresse pour Grid
+
+//#TODO naming convention
+typedef struct Case
 {
 	int x;
 	int y;
-	BooL isBomb;
-	BooL isRevealed;
-	BooL isFlagged;
-	int bombCount;
-	int Value;
+	BooL is_bomb;
+	BooL is_revealed;
+	BooL is_flagged;
+	int bomb_count;
+	int value;
 
-} Tile;
+} Case;
 
 typedef struct Grid
 {
 	int size;
-	Tile** cases; //tableau de pointeurs de cases (tableau de tableaux)
+	Case** cases; //tableau de pointeurs de cases (tableau de tableaux)
 
 } Grid;
 
@@ -61,114 +68,173 @@ int AskIntInterval(const char text[], int MIN, int MAX)
 	return number;
 }
 
-Grid GenerateGrid() {
-	Grid grid;
+void GenerateGrid(Grid* grid) {
 
 	//Demande de la taille de la grille
-	grid.size = AskInt("Entrez la taille du tableau : ");
+	grid->size = AskInt("Entrez la taille du tableau : ");
 
-	//Allocation de la mémoire pour le tableau de cases 
-	grid.cases = (Tile**)malloc(grid.size * sizeof(Tile*));
-
-	//Allocation de la mémoire pour chaque case
-	for (int i = 0; i < grid.size; i++)
+	//Allocation de la mÃ©moire pour le tableau de cases 
+	grid->cases = (Case**)malloc(grid->size * sizeof(Case*));
+	
+	if (grid->cases == NULL)
 	{
-		grid.cases[i] = (Tile*)malloc(grid.size * sizeof(Tile));
+		exit(1);
+	}
+
+	//Allocation de la mÃ©moire pour chaque case
+	for (int i = 0; i < grid->size; i++)
+	{
+		grid->cases[i] = (Case*)malloc(grid->size * sizeof(Case));
+
+		if (grid->cases[i] == NULL)
+		{
+			exit(1);
+		}
 	}
 
 	//Initialisation des cases
-	for (int i = 0; i < grid.size; i++) {
-		for (int j = 0; j < grid.size; j++) {
-			grid.cases[i][j].x = i;
-			grid.cases[i][j].y = j;
-			grid.cases[i][j].isBomb = FALSE;
-			grid.cases[i][j].isRevealed = FALSE;
-			grid.cases[i][j].isFlagged = FALSE;
-			grid.cases[i][j].bombCount = 0;
-			grid.cases[i][j].Value = i * grid.size + j;
+	for (int i = 0; i < grid->size; i++) {
+		for (int j = 0; j < grid->size; j++) {
+			grid->cases[i][j].x = i;
+			grid->cases[i][j].y = j;
+			grid->cases[i][j].is_bomb = FALSE;
+			grid->cases[i][j].is_revealed = FALSE;
+			grid->cases[i][j].is_flagged = FALSE;
+			grid->cases[i][j].bomb_count = 0;
+			grid->cases[i][j].value = i * grid->size + j;
 		}
 	}
-
-	return grid;
 }
 
-void PrintGrid(Grid grid) {
-	HANDLE hConsole;
-	hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-
-	system("cls");
-	//Affichage du tableau
-	for (int i = 0; i < grid.size ; i++)
+Case* GetCase(Grid* pGrid, int i, int j)
+{ // return le piointeur de la case si elle existe, sinon return NULL
+	if (i >= 0 && i < pGrid->size && j >= 0 && j < pGrid->size)
 	{
-		for (int j = 0; j < grid.size ; j++)
-		{
-			if (grid.cases[i][j].isRevealed == TRUE) {
-				if (grid.cases[i][j].isBomb == TRUE) {
+		return &pGrid->cases[i][j];
+	}
+	return NULL;
+}
+
+void PrintGrid(const Grid* grid, BooL show_bombs) {
+	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+	for (int i = 0; i < grid->size; i++) { //lignes
+		printf("\n"); //saut de ligne
+		for (int j = 0; j < grid->size; j++) { //colonnes
+			if (grid->cases[i][j].is_revealed == FALSE)
+			{
+				if (grid->cases[i][j].is_bomb == TRUE && show_bombs) {
+						SetConsoleTextAttribute(hConsole, FOREGROUND_RED);
+						printf("|X |");
+				}
+				else if (grid->cases[i][j].is_flagged == TRUE) {
 					SetConsoleTextAttribute(hConsole, 12);
-					printf("X ");
+					printf("|%d|", grid->cases[i][j].value);
 				}
 				else {
-					SetConsoleTextAttribute(hConsole, 11);
-					printf("%d ", grid.cases[i][j].bombCount);
-				}
-			}
-			else {
-				if (grid.cases[i][j].isFlagged == TRUE) {
-					SetConsoleTextAttribute(hConsole, 10);
-					printf("F ");
-				}
-				else {
-					SetConsoleTextAttribute(hConsole, 15);
-					printf("%d ", grid.cases[i][j].Value);
-				}
-			}
-		}
-		printf("\n");
-	}
-}
-
-void GenerateBombs(Grid grid) {
-	for (int i = 0; i < grid.size; i++) {
-		for (int j = 0; j < grid.size; j++) {
-			int numb = (int)rand() % 100;
-			if (numb < 20) {
-				grid.cases[i][j].isBomb = TRUE;
-			}
-		}
-	}
-}
-
-void CountBombs(Grid grid) {
-	for (int x = 0; x < grid.size; x++) {
-		for (int y = 0; y < grid.size; y++) {
-
-			int count = 0;
-			for (int i = x - 1; i <= x + 1; i++) {
-				for (int j = y - 1; j <= y + 1; j++) {
-
-					if (i >= 0 && i < grid.size && j >= 0 && j < grid.size) {
-						if (grid.cases[i][j].isBomb == TRUE) {
-							count++;
-						}
+					grid->cases[i][j].value = i * grid->size + j;
+					if (grid->cases[i][j].value <= 9) {
+						SetConsoleTextAttribute(hConsole, 15);
+						printf("|%d |", grid->cases[i][j].value);
+					}
+					else {
+						SetConsoleTextAttribute(hConsole, 15);
+						printf("|%d|", grid->cases[i][j].value);
 					}
 				}
 			}
-			grid.cases[x][y].bombCount = count;
-
+			else {
+				if (grid->cases[i][j].is_bomb == TRUE) {
+						SetConsoleTextAttribute(hConsole, FOREGROUND_RED);
+						printf("|X |");
+				}
+				else
+				{
+					//Texte des mines adjacentes
+					if (grid->cases[i][j].bomb_count == 0) {
+						SetConsoleTextAttribute(hConsole, 11);
+						printf("|%d |", grid->cases[i][j].bomb_count);
+					}
+					else if (grid->cases[i][j].bomb_count <= 2) {
+						SetConsoleTextAttribute(hConsole, 9);
+						printf("|%d |", grid->cases[i][j].bomb_count);
+					}
+					else if (grid->cases[i][j].bomb_count <= 4) {
+						SetConsoleTextAttribute(hConsole, 14);
+						printf("|%d |", grid->cases[i][j].bomb_count);
+					}
+					else if (grid->cases[i][j].bomb_count <= 8) {
+						SetConsoleTextAttribute(hConsole, 13);
+						printf("|%d |", grid->cases[i][j].bomb_count);
+					}
+					else {
+						SetConsoleTextAttribute(hConsole, 12);
+						printf("|%d |", grid->cases[i][j].bomb_count);
+					}
+				}
+			}
 		}
 	}
 }
 
-void UpdateGrid(Grid grid, int casesValue)
-{
-	grid.cases[casesValue / grid.size][casesValue % grid.size].isRevealed = TRUE;
+void GenerateBombs(Grid* grid) {
+	int bomb_amount = pow(grid->size, 2) * 0.2;
+	int size = pow(grid->size, 2);
+	int* all_index = (int*)malloc(sizeof(int) * size);
+	if (all_index == NULL)
+	{
+		exit(1);
+	}
 
-	if (grid.cases[casesValue / grid.size][casesValue % grid.size].bombCount == 0) {
-		for (int i = casesValue / grid.size - 1; i <= casesValue / grid.size + 1; i++) {
-			for (int j = casesValue % grid.size - 1; j <= casesValue % grid.size + 1; j++) {
-				if (i >= 0 && i < grid.size && j >= 0 && j < grid.size) {
-					if (grid.cases[i][j].isRevealed == FALSE) {
-						UpdateGrid(grid, grid.cases[i][j].Value);
+	int index1 = 0;
+	for (int i = 0; i < size; i++) {
+		all_index[index1] = i;
+		index1++;
+	}
+
+	for (int i = 0; i < bomb_amount; i++)
+	{
+		int index = rand() % size;
+		int tile_index = all_index[index];
+
+		int x = tile_index / grid->size;
+		int y = tile_index % grid->size;
+
+		grid->cases[x][y].is_bomb = TRUE;
+
+		// count
+		for (int i = x - 1; i <= x + 1; i++) {
+			for (int j = y - 1; j <= y + 1; j++) {
+				if (GetCase(grid, i, j) != NULL) {
+					if (grid->cases[i][j].is_bomb == FALSE) {
+						grid->cases[i][j].bomb_count++;
+					}
+				}
+			}
+		}
+
+		int temp = all_index[size - 1];
+		all_index[size - 1] = tile_index;
+		all_index[index] = temp;
+
+		size--;
+	}
+
+	free(all_index);
+}
+
+void UpdateGrid(Grid* grid, int case_value)
+{
+	int x = case_value / grid->size;
+	int y = case_value % grid->size;
+
+	grid->cases[x][y].is_revealed = TRUE;
+
+	if (grid->cases[x][y].bomb_count == 0) {
+		for (int i = x - 1; i <= x + 1; i++) {
+			for (int j = y - 1; j <= y + 1; j++) {
+				if (GetCase(grid, i, j) != NULL) {
+					if (grid->cases[i][j].is_revealed == FALSE && grid->cases[i][j].is_flagged == FALSE) {
+						UpdateGrid(grid, grid->cases[i][j].value);
 					}
 				}
 			}
@@ -179,6 +245,13 @@ void UpdateGrid(Grid grid, int casesValue)
 
 int main()
 {
+	/*
+	FILE* fptr;
+	fptr = fopen("C:/Users/ikonan/Downloads/message1.txt", "r");
+	fprintf(fptr, "EASTER EGG FOUND !\n");
+	fclose(fptr);
+	*/
+
 	HANDLE hConsole;
 	hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 
@@ -186,41 +259,62 @@ int main()
 	srand(time(NULL));
 
 	//Initialisation de la grille
-	Grid grid = GenerateGrid();
+	Grid grid;
+	GenerateGrid(&grid);
 
-	//Génération des bombes
-	GenerateBombs(grid);
-
-	//Comptage des bombes
-	CountBombs(grid);
+	//GÃ©nÃ©ration des bombes
+	GenerateBombs(&grid);
 
 	//Boucle de jeu
 	do {
 		//Affichage du tableau
-		PrintGrid(grid);
+		PrintGrid(&grid, TRUE);
 		SetConsoleTextAttribute(hConsole, 15);
 
-		//Demande de la case a révéler
-		int a;
-		a = AskIntInterval("\nEntrez la case a reveler : ", 0, (grid.size*grid.size)-1);
-		UpdateGrid(grid, a); 
-		if (grid.cases[a / grid.size][a % grid.size].isBomb == TRUE) {
-			break;
+		//Demande de la case a rÃ©vÃ©ler
+		int UserChoice = AskIntInterval("\nEntrez la case a reveler : ", 0, (grid.size*grid.size)-1);
+
+		int iUser = UserChoice / grid.size;
+		int jUser = UserChoice % grid.size;
+
+		if (grid.cases[iUser][jUser].is_flagged == TRUE) {
+			int RmFlag = AskIntInterval("Que voulez vous faire sur ce drapeau ? (0: Reveler, 1: Enlever le drapeau, 2: Annuler la selection", 0, 2);
+			if (RmFlag == 0) {
+				grid.cases[iUser][jUser].is_flagged = FALSE;
+				UpdateGrid(&grid, UserChoice);
+			}
+			else if (RmFlag == 1) {
+				grid.cases[iUser][jUser].is_flagged = FALSE;
+			}
+		}
+		else {
+			int Choice = AskIntInterval("\nQue voulez-vous faire avec cette case ? (0: Reveler, 1:Mettre un drapeau, 2:Anuler la selection)", 0, 2);
+			if (Choice == 0)
+			{
+				UpdateGrid(&grid, UserChoice);
+				if (grid.cases[iUser][jUser].is_bomb == TRUE) {
+					break;
+				}
+				//TODO VÃ©rification de la victoire
+			}
+			else if (Choice == 1) {
+				grid.cases[iUser][jUser].is_flagged = TRUE;
+			}
 		}
 		
 	} while (1);
 	
 	system("cls");
-	PrintGrid(grid);
+	PrintGrid(&grid, TRUE);
 	SetConsoleTextAttribute(hConsole, 15);
 	printf("\nVous avez perdu !\n");
 
-	//Libération de la mémoire
+	//LibÃ©ration de la mÃ©moire
 	for (int i = 0; i < grid.size; i++)
 	{
 		free(grid.cases[i]);
 	}
 	free(grid.cases);
-	
+
 	return 0;
 }
