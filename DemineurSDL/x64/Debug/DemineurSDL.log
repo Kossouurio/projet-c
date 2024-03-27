@@ -3,41 +3,6 @@ C:\Users\tzocca\source\repos\DemineurSDL\DemineurSDL\Demineur.h(8,1): warning C4
 C:\Users\tzocca\source\repos\DemineurSDL\DemineurSDL\Demineur.h(8,1): message : 'UNICODE' précédemment déclaré en ligne de commande
 C:\Users\tzocca\source\repos\DemineurSDL\DemineurSDL\Demineur.h(9,1): warning C4005: '_UNICODE' : redéfinition de macro
 C:\Users\tzocca\source\repos\DemineurSDL\DemineurSDL\Demineur.h(9,1): message : '_UNICODE' précédemment déclaré en ligne de commande
-C:\Users\tzocca\source\repos\DemineurSDL\DemineurSDL\01_hello_SDL.c(5,13): error C2085: 'pImgPathDark' : ne figure pas dans la liste de paramètres formels
-C:\Users\tzocca\source\repos\DemineurSDL\DemineurSDL\01_hello_SDL.c(5,28): error C2143: erreur de syntaxe : absence de ';' avant '='
-C:\Users\tzocca\source\repos\DemineurSDL\DemineurSDL\01_hello_SDL.c(42,14): error C2084: la fonction 'SDL_Texture *Createtexture(const char *,SDL_Renderer *)' a déjà un corps
-C:\Users\tzocca\source\repos\DemineurSDL\DemineurSDL\Demineur.h(81,14): message : voir la définition précédente de 'Createtexture'
-C:\Users\tzocca\source\repos\DemineurSDL\DemineurSDL\01_hello_SDL.c(77,47): error C2065: 'pImgPathDark' : identificateur non déclaré
-C:\Users\tzocca\source\repos\DemineurSDL\DemineurSDL\01_hello_SDL.c(77,46): error C2109: un indice requiert un type tableau ou pointeur
-C:\Users\tzocca\source\repos\DemineurSDL\DemineurSDL\01_hello_SDL.c(77,51): warning C4133: 'fonction' : types incompatibles - de 'SDL_Renderer *' à 'const char *'
-C:\Users\tzocca\source\repos\DemineurSDL\DemineurSDL\01_hello_SDL.c(77,20): error C2198: 'Createtexture' : pas assez d'arguments pour un appel
-C:\Users\tzocca\source\repos\DemineurSDL\DemineurSDL\01_hello_SDL.c(144,53): error C2065: 'Dark_Texture' : identificateur non déclaré
-C:\Users\tzocca\source\repos\DemineurSDL\DemineurSDL\01_hello_SDL.c(144,41): warning C4047: 'fonction' : les niveaux d'indirection de 'SDL_Texture *' et de 'int' sont différents
-C:\Users\tzocca\source\repos\DemineurSDL\DemineurSDL\01_hello_SDL.c(144,41): warning C4024: 'PrintGridSDL' : types différents pour le paramètre formel et réel 3
-C:\Users\tzocca\source\repos\DemineurSDL\DemineurSDL\01_hello_SDL.c(144,68): error C2065: 'Light_Texture' : identificateur non déclaré
-C:\Users\tzocca\source\repos\DemineurSDL\DemineurSDL\01_hello_SDL.c(144,55): warning C4047: 'fonction' : les niveaux d'indirection de 'SDL_Texture *' et de 'int' sont différents
-C:\Users\tzocca\source\repos\DemineurSDL\DemineurSDL\01_hello_SDL.c(144,55): warning C4024: 'PrintGridSDL' : types différents pour le paramètre formel et réel 4
-C:\Users\tzocca\source\repos\DemineurSDL\DemineurSDL\01_hello_SDL.c(149,34): error C2065: 'Light_Texture' : identificateur non déclaré
-C:\Users\tzocca\source\repos\DemineurSDL\DemineurSDL\01_hello_SDL.c(149,21): warning C4047: 'fonction' : les niveaux d'indirection de 'SDL_Texture *' et de 'int' sont différents
-C:\Users\tzocca\source\repos\DemineurSDL\DemineurSDL\01_hello_SDL.c(149,21): warning C4024: 'SDL_DestroyTexture' : types différents pour le paramètre formel et réel 1
-C:\Users\tzocca\source\repos\DemineurSDL\DemineurSDL\01_hello_SDL.c(150,33): error C2065: 'Dark_Texture' : identificateur non déclaré
-C:\Users\tzocca\source\repos\DemineurSDL\DemineurSDL\01_hello_SDL.c(150,21): warning C4047: 'fonction' : les niveaux d'indirection de 'SDL_Texture *' et de 'int' sont différents
-C:\Users\tzocca\source\repos\DemineurSDL\DemineurSDL\01_hello_SDL.c(150,21): warning C4024: 'SDL_DestroyTexture' : types différents pour le paramètre formel et réel 1
-  Demineur.c
-C:\Users\tzocca\source\repos\DemineurSDL\DemineurSDL\Demineur.h(8,1): warning C4005: 'UNICODE' : redéfinition de macro
-C:\Users\tzocca\source\repos\DemineurSDL\DemineurSDL\Demineur.h(8,1): message : 'UNICODE' précédemment déclaré en ligne de commande
-C:\Users\tzocca\source\repos\DemineurSDL\DemineurSDL\Demineur.h(9,1): warning C4005: '_UNICODE' : redéfinition de macro
-C:\Users\tzocca\source\repos\DemineurSDL\DemineurSDL\Demineur.h(9,1): message : '_UNICODE' précédemment déclaré en ligne de commande
-C:\Users\tzocca\source\repos\DemineurSDL\DemineurSDL\Demineur.c(5,14): error C2082: redéfinition du paramètre formel 'BOOL2'
-C:\Users\tzocca\source\repos\DemineurSDL\DemineurSDL\Demineur.c(18,5): error C2085: 'COLORS' : ne figure pas dans la liste de paramètres formels
-C:\Users\tzocca\source\repos\DemineurSDL\DemineurSDL\Demineur.c(18,14): error C2143: erreur de syntaxe : absence de ';' avant '='
-C:\Users\tzocca\source\repos\DemineurSDL\DemineurSDL\Demineur.c(150,47): error C2065: 'COLORS' : identificateur non déclaré
-C:\Users\tzocca\source\repos\DemineurSDL\DemineurSDL\Demineur.c(150,46): error C2109: un indice requiert un type tableau ou pointeur
-C:\Users\tzocca\source\repos\DemineurSDL\DemineurSDL\Demineur.c(150,6): error C2198: 'SetConsoleTextAttribute' : pas assez d'arguments pour un appel
-C:\Users\tzocca\source\repos\DemineurSDL\DemineurSDL\Demineur.c(194,19): warning C4305: '=' : troncation de 'double' à 'float'
-C:\Users\tzocca\source\repos\DemineurSDL\DemineurSDL\Demineur.c(200,19): warning C4305: '=' : troncation de 'double' à 'float'
-C:\Users\tzocca\source\repos\DemineurSDL\DemineurSDL\Demineur.c(202,47): warning C4244: 'initialisation' : conversion de 'float' en 'int', perte possible de données
-C:\Users\tzocca\source\repos\DemineurSDL\DemineurSDL\Demineur.c(354,106): warning C4244: 'fonction' : conversion de 'double' en 'int', perte possible de données
-C:\Users\tzocca\source\repos\DemineurSDL\DemineurSDL\Demineur.c(393,49): warning C4244: '=' : conversion de 'double' en 'int', perte possible de données
-C:\Users\tzocca\source\repos\DemineurSDL\DemineurSDL\Demineur.c(420,9): warning C4244: 'fonction' : conversion de 'time_t' en 'unsigned int', perte possible de données
-  Génération de code en cours...
+C:\Users\tzocca\source\repos\DemineurSDL\DemineurSDL\01_hello_SDL.c(207,47): warning C4244: '=' : conversion de 'double' en 'int', perte possible de données
+C:\Users\tzocca\source\repos\DemineurSDL\DemineurSDL\01_hello_SDL.c(146): warning C4716: 'Restart' : doit retourner une valeur
+  DemineurSDL.vcxproj -> C:\Users\tzocca\source\repos\DemineurSDL\x64\Debug\DemineurSDL.exe

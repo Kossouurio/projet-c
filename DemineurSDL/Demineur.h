@@ -20,6 +20,7 @@
 #define DARK7 "C:/Users/tzocca/source/repos/DemineurSDL/DemineurSDL/Resources/dark/dark7.bmp"
 #define DARK8 "C:/Users/tzocca/source/repos/DemineurSDL/DemineurSDL/Resources/dark/dark8.bmp"
 #define BASE_DARK "C:/Users/tzocca/source/repos/DemineurSDL/DemineurSDL/Resources/dark/darkbase.bmp"
+#define DARK_FLAG "C:/Users/tzocca/source/repos/DemineurSDL/DemineurSDL/Resources/dark/dark_flag.bmp"
 
 
 #define LIGHT_TILE "C:/Users/tzocca/source/repos/DemineurSDL/DemineurSDL/Resources/light/light_green_tile.bmp"
@@ -33,8 +34,15 @@
 #define LIGHT7 "C:/Users/tzocca/source/repos/DemineurSDL/DemineurSDL/Resources/light/light7.bmp"
 #define LIGHT8 "C:/Users/tzocca/source/repos/DemineurSDL/DemineurSDL/Resources/light/light8.bmp"
 #define BASE_LIGHT "C:/Users/tzocca/source/repos/DemineurSDL/DemineurSDL/Resources/light/lightbase.bmp"
+#define LIGHT_FLAG "C:/Users/tzocca/source/repos/DemineurSDL/DemineurSDL/Resources/light/light_flag.bmp"
 
 #define BOMB "C:/Users/tzocca/source/repos/DemineurSDL/DemineurSDL/Resources/bomb.bmp"
+#define DEATH_SCREEN "C:/Users/tzocca/source/repos/DemineurSDL/DemineurSDL/Resources/death_screen.bmp"
+#define EASTER_EGG "C:/Users/tzocca/source/repos/DemineurSDL/DemineurSDL/Resources/easteregg.bmp"
+#define VICTORY_SCREEN "C:/Users/tzocca/source/repos/DemineurSDL/DemineurSDL/Resources/victory.bmp"
+
+#define WIDTH 1280
+#define HEIGHT 720
 
 typedef char BOOL2;
 #define TRUE 1
@@ -73,9 +81,9 @@ Tile* GetTile(Grid* pGrid, int i, int j);
 void PrintGrid(Grid* pGrid, BOOL2 ShowBomb);
 int GetRand(int min, int max);
 int GenerateBomb(Grid* pGrid, int iFirst, int jFirst);
-void InitGrid(Grid* pGrid);
+void InitGrid(Grid* pGrid, SDL_Texture** LightTab, SDL_Texture** DarkTab);
 int GetNeighbour(Grid* pGrid, int i, int j);
 void UpdateGrid(Grid* pGrid, int i, int j);
 BOOL2 CheckWin(const Grid* pGrid);
 void LaunchGame(Grid* pGrid);
-SDL_Texture* Createtexture(const char* path, SDL_Renderer* renderer)
+SDL_Texture* Createtexture(const char* path, SDL_Renderer* renderer);

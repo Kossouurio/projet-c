@@ -201,8 +201,8 @@ int COLORS[] = { CYAN, DARKBLUE, DARKBLUE, YELLOW, YELLOW, PINK, PINK, RED };
 		}
 		int bomb_amount = pGrid->size * pGrid->size * BombRatio;
 		int size = pGrid->size * pGrid->size;
-		int MinOffset = size / 45;
-		int MaxOffset = size / 30;
+		int MinOffset = size / 60;
+		int MaxOffset = size / 50;
 		int* all_index = (int*)malloc(sizeof(int) * size);
 		if (all_index == NULL) 
 		{
@@ -256,8 +256,10 @@ int COLORS[] = { CYAN, DARKBLUE, DARKBLUE, YELLOW, YELLOW, PINK, PINK, RED };
 		return bomb_amount;
 	}
 
-	void InitGrid(Grid* pGrid) {
-		pGrid->size = AskIntBetween("Rentrez la taille de la grille sur laquelle vous voulez jouer : ",5,24);
+
+
+	void InitGrid(Grid* pGrid, SDL_Texture** LightTab, SDL_Texture** DarkTab) {
+		pGrid->size = AskIntBetween("Rentrez la taille de la grille sur laquelle vous voulez jouer : ",5,min(WIDTH,HEIGHT)/32);
 		pGrid->difficulty = AskChar("Dans quelle difficulte voulez vous jouer ? (E pour Easy, M pour Medium, H pour Hard", "EeMmHh");
 		
 
@@ -289,7 +291,14 @@ int COLORS[] = { CYAN, DARKBLUE, DARKBLUE, YELLOW, YELLOW, PINK, PINK, RED };
 				tile->Value = i * pGrid->size + j;
 				tile->IsMined = FALSE;
 				tile->IsFlag = FALSE;
-				
+				tile->AdjacentMines = 0;
+				if ((i + j) % 2 == 0) 
+				{
+					tile->Texture = LightTab[9];
+				}
+				else {
+					tile->Texture = DarkTab[9];
+				}
 			}
 		}
 	}
@@ -302,7 +311,7 @@ int COLORS[] = { CYAN, DARKBLUE, DARKBLUE, YELLOW, YELLOW, PINK, PINK, RED };
 				if (tile == NULL)
 					continue;
 
-				if (tile->IsMined) 
+				if (tile->IsMined == TRUE) 
 				{
 					Neighbour++;
 				}
@@ -421,7 +430,7 @@ int COLORS[] = { CYAN, DARKBLUE, DARKBLUE, YELLOW, YELLOW, PINK, PINK, RED };
 
 		do {
 			Grid grid;
-			InitGrid(&grid);
+			//InitGrid(&grid);
 			LaunchGame(&grid);
 			replay = AskChar("\nVoulez vous rejouer ?", "YyNn");
 		} while (replay == 'y' || replay == 'Y');

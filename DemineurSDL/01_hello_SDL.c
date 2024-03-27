@@ -2,8 +2,8 @@
 #include <SDL.h>
 #include "Demineur.h"
 
-const char* pImgPathDark[] = { DARK_TILE, BASE_DARK, DARK1,DARK2,DARK3,DARK4,DARK5,DARK6,DARK7,DARK8 };
-const char* pImgPathLight[] = { LIGHT_TILE, BASE_LIGHT, LIGHT1,LIGHT2,LIGHT3,LIGHT4,LIGHT5,LIGHT6,LIGHT7,LIGHT8 };
+const char* pImgPathDark[] = { BASE_DARK, DARK1,DARK2,DARK3,DARK4,DARK5,DARK6,DARK7,DARK8,  DARK_TILE, DARK_FLAG };
+const char* pImgPathLight[] = {  BASE_LIGHT, LIGHT1,LIGHT2,LIGHT3,LIGHT4,LIGHT5,LIGHT6,LIGHT7,LIGHT8, LIGHT_TILE, LIGHT_FLAG };
 
 void PrintTile(int x, int y, int w, int h,  SDL_Texture* Texture, SDL_Renderer* renderer) {
 	SDL_QueryTexture(Texture, NULL, NULL, &w, &h);
@@ -11,32 +11,93 @@ void PrintTile(int x, int y, int w, int h,  SDL_Texture* Texture, SDL_Renderer* 
 	SDL_RenderCopy(renderer, Texture, NULL, &Rect);
 }
 
-void PrintGridSDL(int w, int h, SDL_Texture* Texture, SDL_Texture* Texture2, SDL_Texture* Bomb, SDL_Renderer* renderer, Grid* pGrid) {
-	for (int i = 0; i < pGrid->size; i++) {
-		for (int j = 0; j < pGrid->size; j++) {
-			if (pGrid->tile[i][j].IsRevealed == FALSE) {
-				if (pGrid->tile[i][j].IsMined == TRUE) {
-					PrintTile(i * h, j * w, w, h, Bomb, renderer);
-				}
-				else if ((i + j) % 2 == 0) {
-					PrintTile(i * h, j * w, w, h, Texture, renderer);
+int EasterEgg() {
+
+	// variable declarations
+	SDL_Window* win2 = NULL;
+	SDL_Renderer* renderer = NULL;
+	int tile_width = 32;
+	int	tile_height = 32; // texture width & height
+
+	if (SDL_Init(SDL_INIT_VIDEO) < 0)
+		return 1;
+
+	win2 = SDL_CreateWindow("EasterEgg de fou", 100, 100, 564, 563, 0);
+	renderer = SDL_CreateRenderer(win2, -1, SDL_RENDERER_ACCELERATED);
+	SDL_Texture* Win_Texture = Createtexture(EASTER_EGG, renderer);
+	SDL_RenderClear(renderer);
+	SDL_Rect dstrect = { 0, 0, WIDTH, HEIGHT };
+	SDL_RenderCopy(renderer, Win_Texture, NULL, &dstrect);
+	SDL_RenderPresent(renderer);
+	SDL_Event e;
+	if (SDL_PollEvent(&e)) {
+		if (e.type == SDL_QUIT)
+			SDL_DestroyWindow(win2);
+		else if (e.type == SDL_KEYUP && e.key.keysym.sym == SDLK_ESCAPE)
+			SDL_DestroyWindow(win2);
+	}
+	return 0;
+}
+
+BOOL2 IsEight = FALSE;
+
+void PrintGridSDL(int w, int h, SDL_Texture** LightTexture, SDL_Texture** Darktexture, SDL_Texture* Bomb, SDL_Renderer* renderer, Grid* pGrid, BOOL2 ShowBomb) {
+	if (IsEight == TRUE) {
+		EasterEgg();
+	}
+	else {
+		for (int i = 0; i < pGrid->size; i++) {
+			for (int j = 0; j < pGrid->size; j++) {
+				Tile* tile = GetTile(pGrid, i, j);
+				if (tile->IsRevealed == FALSE) {
+					if (tile->IsMined == TRUE && ShowBomb == TRUE) {
+						tile->Texture = Bomb;
+						PrintTile(i * h, j * w, w, h, tile->Texture, renderer);
+					}
+					else if (tile->IsFlag == TRUE) {
+						if ((i + j) % 2 == 0) //light tile
+						{
+							tile->Texture = LightTexture[10];
+						}
+						else {
+							tile->Texture = Darktexture[10];
+						}
+					}
+					else {
+						if ((i + j) % 2 == 0)
+						{
+							tile->Texture = LightTexture[9];
+						}
+						else {
+							tile->Texture = Darktexture[9];
+						}
+					}
+
+					PrintTile(i * h, j * w, w, h, tile->Texture, renderer);
+
 				}
 				else {
-					PrintTile(i * h, j * w, w, h, Texture2, renderer);
+					if (tile->AdjacentMines == 8) {
+						IsEight = TRUE;
+					}
+					if ((i + j) % 2 == 0) //light tile
+					{
+						tile->Texture = LightTexture[tile->AdjacentMines];
+					}
+					else {
+						tile->Texture = Darktexture[tile->AdjacentMines];
+					}
+					PrintTile(i * h, j * w, w, h, tile->Texture, renderer);
 				}
-			}
-			else {
-				
+
 			}
 
 		}
-		
 	}
 }
 
 
-#define WIDTH 800
-#define HEIGHT 640
+
 
 
 SDL_Texture* Createtexture(const char* path, SDL_Renderer* renderer) {
@@ -49,6 +110,41 @@ SDL_Texture* Createtexture(const char* path, SDL_Renderer* renderer) {
 	return Texture;
 }
 
+void DestroyTexture(SDL_Texture** TextureTab) {
+	for (int i = 0; i < 11; i++) {
+		SDL_DestroyTexture(TextureTab[i]);
+	}
+	free(TextureTab);
+}
+
+Grid Restart(Grid* pGrid, SDL_Texture** LightTab, SDL_Texture** DarkTab) {
+	Grid NewGrid;
+	NewGrid.size = pGrid->size;
+	NewGrid.difficulty = pGrid->difficulty;
+	for (int i = 0; i < pGrid->size; i++)
+	{
+		for (int j = 0; j < pGrid->size; j++)
+		{
+			Tile* tile = GetTile(pGrid, i, j);
+
+			tile->x = i;
+			tile->y = j;
+			tile->IsRevealed = FALSE;
+			tile->Value = i * pGrid->size + j;
+			tile->IsMined = FALSE;
+			tile->IsFlag = FALSE;
+			tile->AdjacentMines = 0;
+			if ((i + j) % 2 == 0)
+			{
+				tile->Texture = LightTab[9];
+			}
+			else {
+				tile->Texture = DarkTab[9];
+			}
+		}
+	}
+}
+
 int main(int argc, char* argv[]) {
 
 	// variable declarations
@@ -57,69 +153,39 @@ int main(int argc, char* argv[]) {
 	int tile_width = 32;
 	int	tile_height = 32; // texture width & height
 
-
-	// Initialize SDL.
 	if (SDL_Init(SDL_INIT_VIDEO) < 0)
 		return 1;
 
-	// create the window and renderer
-	// note that the renderer is accelerated
 	win = SDL_CreateWindow("MineSweeper", 100, 100, WIDTH, HEIGHT, 0);
 	renderer = SDL_CreateRenderer(win, -1, SDL_RENDERER_ACCELERATED);
 
-	// load our image
-
-	SDL_Texture** DarkTexture = (SDL_Texture**) malloc(sizeof(SDL_Texture*) * 10);
+	SDL_Texture** DarkTexture = (SDL_Texture**)malloc(sizeof(SDL_Texture*) * 11);
 	if (DarkTexture == NULL) {
 		exit(1);
 	}
-	for (int i = 0; i < 10; i++) {
+	for (int i = 0; i < 11; i++) {
 		DarkTexture[i] = Createtexture(pImgPathDark[i], renderer);
 	}
 
-	SDL_Texture** LightTexture = (SDL_Texture**)malloc(sizeof(SDL_Texture*) * 10);
+	SDL_Texture** LightTexture = (SDL_Texture**)malloc(sizeof(SDL_Texture*) * 11);
 	if (LightTexture == NULL) {
 		exit(1);
 	}
-	for (int i = 0; i < 10; i++) {
+	for (int i = 0; i < 11; i++) {
 		LightTexture[i] = Createtexture(pImgPathLight[i], renderer);
 	}
 
-	/*SDL_Texture* Dark_Texture = Createtexture(DARK_TILE, renderer);
-	SDL_Texture* BaseDark = Createtexture(BASE_DARK, renderer);
-	SDL_Texture* Dark1 = Createtexture(DARK1, renderer);
-	SDL_Texture* Dark2 = Createtexture(DARK2, renderer);
-	SDL_Texture* Dark3 = Createtexture(DARK3, renderer);
-	SDL_Texture* Dark4 = Createtexture(DARK4, renderer);
-	SDL_Texture* Dark5 = Createtexture(DARK5, renderer);
-	SDL_Texture* Dark6 = Createtexture(DARK6, renderer);
-	SDL_Texture* Dark7 = Createtexture(DARK7, renderer);
-	SDL_Texture* Dark8 = Createtexture(DARK8, renderer);*/
-
-
-
-	/*SDL_Texture* Light_Texture = Createtexture(LIGHT_TILE, renderer);
-	SDL_Texture* Light1 = Createtexture(LIGHT1, renderer);
-	SDL_Texture* Light2 = Createtexture(LIGHT2, renderer);
-	SDL_Texture* Light3 = Createtexture(LIGHT3, renderer);
-	SDL_Texture* Light4 = Createtexture(LIGHT4, renderer);
-	SDL_Texture* Light5 = Createtexture(LIGHT5, renderer);
-	SDL_Texture* Light6 = Createtexture(LIGHT6, renderer);
-	SDL_Texture* Light7 = Createtexture(LIGHT7, renderer);
-	SDL_Texture* Light8 = Createtexture(LIGHT8, renderer);*/
 
 
 	SDL_Texture* Bomb = Createtexture(BOMB, renderer);
-
 	Grid grid;
-	InitGrid(&grid);
-	GenerateBomb(&grid,8,8);
+	InitGrid(&grid, LightTexture, DarkTexture);
 
 	// main loop
-	while (1) {
+	BOOL2 FirstInput = TRUE;
+	int end = 0;
+	while (end == 0) {
 		int MouseX, MouseY;
-		
-
 
 		// event handling
 		SDL_Event e;
@@ -130,24 +196,90 @@ int main(int argc, char* argv[]) {
 				break;
 			if (e.type == SDL_MOUSEBUTTONDOWN) {
 				SDL_GetMouseState(&MouseX, &MouseY);
-				int Tilei = MouseX % 32;
-				int Tilej = MouseY / 32;
+				int Tilei = MouseX / tile_height;
+				int Tilej = MouseY / tile_width;
+				if (InGrid(Tilei, Tilej, &grid) == FALSE)
+					continue;
+				Tile* tile = GetTile(&grid, Tilei, Tilej);
 				if (e.button.button == SDL_BUTTON_LEFT) {
-					Tile* tile = GetTile(&grid, Tilei, Tilej);
+					if (FirstInput == TRUE) {
+						int bomb_amount = GenerateBomb(&grid, Tilei, Tilej);
+						grid.remainingtiles = pow(grid.size, 2) - bomb_amount;
+						FirstInput = FALSE;
+					}
+					if (tile->IsMined == TRUE) {
+						end = -1;
+					}
+
+
+					UpdateGrid(&grid, Tilei, Tilej);
+					if (CheckWin(&grid) == TRUE) {
+						end = 1;
+					}
+				}
+				else if (e.button.button == SDL_BUTTON_RIGHT) {
+					if (tile->IsFlag == TRUE) {
+						tile->IsFlag = FALSE;
+					}
+					else {
+						tile->IsFlag = TRUE;
+					}
 				}
 			}
 
 		}
 
+	while (end == -1) {
+		SDL_Texture* Death_Texture = Createtexture(DEATH_SCREEN, renderer);
+		SDL_RenderClear(renderer);
+		SDL_Rect dstrect = { 0, 0, WIDTH, HEIGHT };
+		SDL_RenderCopy(renderer, Death_Texture, NULL, &dstrect);
+		SDL_RenderPresent(renderer);
+		SDL_Event e;
+		if (SDL_PollEvent(&e)) {
+			if (e.type == SDL_QUIT)
+				break;
+			else if (e.type == SDL_KEYUP && e.key.keysym.sym == SDLK_ESCAPE)
+				break;
+			if (e.type == SDL_MOUSEBUTTONDOWN) {
+				Restart(&grid, LightTexture, DarkTexture);
+				FirstInput = TRUE;
+				end = 0;
+			}
+		}
+	}
+
+	while (end == 1) {
+		SDL_Texture* Win_Texture = Createtexture(VICTORY_SCREEN, renderer);
+		SDL_RenderClear(renderer);
+		SDL_Rect dstrect = { 0, 0, WIDTH, HEIGHT };	
+		SDL_RenderCopy(renderer, Win_Texture, NULL, &dstrect);
+		SDL_RenderPresent(renderer);
+		SDL_Event e;
+		if (SDL_PollEvent(&e)) {
+			if (e.type == SDL_QUIT)
+				break;
+			else if (e.type == SDL_KEYUP && e.key.keysym.sym == SDLK_ESCAPE)
+				break;
+			if (e.type == SDL_MOUSEBUTTONDOWN) {
+				Restart(&grid, LightTexture, DarkTexture);
+				FirstInput = TRUE;
+				end = 0;
+			}
+		}
+	}
+
 		// clear the screen
 		SDL_RenderClear(renderer);
-		PrintGridSDL(tile_width, tile_height, Dark_Texture, Light_Texture,Bomb, renderer, &grid);
+
+		PrintGridSDL(tile_width, tile_height, LightTexture, DarkTexture, Bomb, renderer, &grid,TRUE);
 
 		SDL_RenderPresent(renderer);
 
 	}
-	SDL_DestroyTexture(Light_Texture);
-	SDL_DestroyTexture(Dark_Texture);
+
+	DestroyTexture(LightTexture);
+	DestroyTexture(DarkTexture);
 	SDL_DestroyRenderer(renderer);
 	SDL_DestroyWindow(win);
 
