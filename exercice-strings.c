@@ -1,4 +1,4 @@
-#include <stdlib.h>
+﻿#include <stdlib.h>
 #include <stdio.h>
 
 typedef struct String
@@ -116,7 +116,7 @@ String Insert( const String* pStr1, const String* pStr2, int iIndex )
 	String newStr = Concatenate1( &concStr, &subStr2);
 
 	
-	///Autre fa�on de faire le Insert
+	///Autre façon de faire le Insert
 	/*
 	String newStr;
 	newStr.iLength = pStr1->iLength + pStr2->iLength;
@@ -158,7 +158,14 @@ int AreEquals( const String* pStr1, const String* pStr2 )
 
 int TryCastToInt( const String* pStr, int* iResult )
 {
-	*iResult = 1253;
+	*iResult = 0;
+	for (int i = 0; i < pStr->iLength; ++i)
+	{	
+		if (pStr->pContent[i] < '0' || pStr->pContent[i] > '9') { return 0; }
+
+		*iResult = *iResult * 10 + (pStr->pContent[i] - '0');
+	}
+
 	return 1;
 }
 
@@ -207,8 +214,8 @@ int main()
 	printf("\n-------| TryCastToInt |-------\n");
 	String str8 = Create("4682");
 	int* iStr8;
-	TryCastToInt(&str8, &iStr8);
-	printf("%d", iStr8);
+	printf("Out: %d // ", TryCastToInt(&str8, &iStr8));
+	printf("Result: %d", (int)iStr8);
 
 	//Destroyer
 	Destroy(&str1);
