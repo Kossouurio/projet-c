@@ -41,12 +41,13 @@
 #define EASTER_EGG "C:/Users/tzocca/source/repos/DemineurSDL/DemineurSDL/Resources/easteregg.bmp"
 #define VICTORY_SCREEN "C:/Users/tzocca/source/repos/DemineurSDL/DemineurSDL/Resources/victory.bmp"
 
-#define WIDTH 1280
+#define WIDTH 720
 #define HEIGHT 720
 
 typedef char BOOL2;
 #define TRUE 1
 #define FALSE 0
+
 
 
 
@@ -82,8 +83,10 @@ void PrintGrid(Grid* pGrid, BOOL2 ShowBomb);
 int GetRand(int min, int max);
 int GenerateBomb(Grid* pGrid, int iFirst, int jFirst);
 void InitGrid(Grid* pGrid, SDL_Texture** LightTab, SDL_Texture** DarkTab);
-int GetNeighbour(Grid* pGrid, int i, int j);
 void UpdateGrid(Grid* pGrid, int i, int j);
 BOOL2 CheckWin(const Grid* pGrid);
 void LaunchGame(Grid* pGrid);
 SDL_Texture* Createtexture(const char* path, SDL_Renderer* renderer);
+Grid Init8Grid(Grid* pGrid, SDL_Texture** LightTab, SDL_Texture** DarkTab);
+void InitDebugGrid(Grid* pGrid, SDL_Texture** LightTab, SDL_Texture** DarkTab, int tab[7][7]);
+void GenerateBombDebug(Grid* pGrid, int tab[7][7]);

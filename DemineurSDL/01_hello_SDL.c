@@ -22,81 +22,75 @@ int EasterEgg() {
 	if (SDL_Init(SDL_INIT_VIDEO) < 0)
 		return 1;
 
-	win2 = SDL_CreateWindow("EasterEgg de fou", 100, 100, 564, 563, 0);
+	win2 = SDL_CreateWindow("EasterEgg de fou", 100, 100, 720, 720, 0);
 	renderer = SDL_CreateRenderer(win2, -1, SDL_RENDERER_ACCELERATED);
 	SDL_Texture* Win_Texture = Createtexture(EASTER_EGG, renderer);
 	SDL_RenderClear(renderer);
 	SDL_Rect dstrect = { 0, 0, WIDTH, HEIGHT };
 	SDL_RenderCopy(renderer, Win_Texture, NULL, &dstrect);
 	SDL_RenderPresent(renderer);
+	BOOL2 running = TRUE;
 	SDL_Event e;
-	if (SDL_PollEvent(&e)) {
-		if (e.type == SDL_QUIT)
-			SDL_DestroyWindow(win2);
-		else if (e.type == SDL_KEYUP && e.key.keysym.sym == SDLK_ESCAPE)
-			SDL_DestroyWindow(win2);
+	while (running == TRUE) {
+		while (SDL_PollEvent(&e)) {
+			if (e.type == SDL_MOUSEBUTTONDOWN) {
+				SDL_DestroyWindow(win2);
+				running = FALSE;
+			}
+		}
 	}
+
 	return 0;
 }
 
-BOOL2 IsEight = FALSE;
 
 void PrintGridSDL(int w, int h, SDL_Texture** LightTexture, SDL_Texture** Darktexture, SDL_Texture* Bomb, SDL_Renderer* renderer, Grid* pGrid, BOOL2 ShowBomb) {
-	if (IsEight == TRUE) {
-		EasterEgg();
-	}
-	else {
-		for (int i = 0; i < pGrid->size; i++) {
-			for (int j = 0; j < pGrid->size; j++) {
-				Tile* tile = GetTile(pGrid, i, j);
-				if (tile->IsRevealed == FALSE) {
-					if (tile->IsMined == TRUE && ShowBomb == TRUE) {
-						tile->Texture = Bomb;
-						PrintTile(i * h, j * w, w, h, tile->Texture, renderer);
-					}
-					else if (tile->IsFlag == TRUE) {
-						if ((i + j) % 2 == 0) //light tile
-						{
-							tile->Texture = LightTexture[10];
-						}
-						else {
-							tile->Texture = Darktexture[10];
-						}
-					}
-					else {
-						if ((i + j) % 2 == 0)
-						{
-							tile->Texture = LightTexture[9];
-						}
-						else {
-							tile->Texture = Darktexture[9];
-						}
-					}
-
+	for (int i = 0; i < pGrid->size; i++) {
+		for (int j = 0; j < pGrid->size; j++) {
+			Tile* tile = GetTile(pGrid, i, j);
+			if (tile->IsRevealed == FALSE) {
+				if (tile->IsMined == TRUE && ShowBomb == TRUE) {
+					tile->Texture = Bomb;
 					PrintTile(i * h, j * w, w, h, tile->Texture, renderer);
-
 				}
-				else {
-					if (tile->AdjacentMines == 8) {
-						IsEight = TRUE;
-					}
+				else if (tile->IsFlag == TRUE) {
 					if ((i + j) % 2 == 0) //light tile
 					{
-						tile->Texture = LightTexture[tile->AdjacentMines];
+						tile->Texture = LightTexture[10];
 					}
 					else {
-						tile->Texture = Darktexture[tile->AdjacentMines];
+						tile->Texture = Darktexture[10];
 					}
-					PrintTile(i * h, j * w, w, h, tile->Texture, renderer);
+				}
+				else {
+					if ((i + j) % 2 == 0)
+					{
+						tile->Texture = LightTexture[9];
+					}
+					else {
+						tile->Texture = Darktexture[9];
+					}
 				}
 
+				PrintTile(i * h, j * w, w, h, tile->Texture, renderer);
+
+			}
+			else {
+				if ((i + j) % 2 == 0) //light tile
+				{
+					tile->Texture = LightTexture[tile->AdjacentMines];
+				}
+				else {
+					tile->Texture = Darktexture[tile->AdjacentMines];
+				}
+				PrintTile(i * h, j * w, w, h, tile->Texture, renderer);
 			}
 
 		}
+
 	}
+	
 }
-
-
 
 
 
@@ -175,11 +169,23 @@ int main(int argc, char* argv[]) {
 		LightTexture[i] = Createtexture(pImgPathLight[i], renderer);
 	}
 
+	int tilesDebug[][7] =
+	{
+		{0,0,0,1,1,1,0},
+		{0,0,0,1,0,1,0},
+		{0,0,0,1,1,1,0},
+		{0,0,0,1,0,0,0},
+		{0,0,0,1,0,0,0},
+		{0,0,0,1,0,0,0},
+		{0,0,0,1,0,0,0},
+	};
 
 
 	SDL_Texture* Bomb = Createtexture(BOMB, renderer);
 	Grid grid;
 	InitGrid(&grid, LightTexture, DarkTexture);
+	//Init8Grid(&grid, LightTexture, DarkTexture);
+	//InitDebugGrid(&grid, LightTexture, DarkTexture, tilesDebug);
 
 	// main loop
 	BOOL2 FirstInput = TRUE;
@@ -205,17 +211,21 @@ int main(int argc, char* argv[]) {
 					if (FirstInput == TRUE) {
 						int bomb_amount = GenerateBomb(&grid, Tilei, Tilej);
 						grid.remainingtiles = pow(grid.size, 2) - bomb_amount;
+						//GenerateBombDebug(&grid, tilesDebug);
 						FirstInput = FALSE;
 					}
 					if (tile->IsMined == TRUE) {
 						end = -1;
 					}
-
-
-					UpdateGrid(&grid, Tilei, Tilej);
-					if (CheckWin(&grid) == TRUE) {
-						end = 1;
+					else {
+						UpdateGrid(&grid, Tilei, Tilej);
+						if (CheckWin(&grid) == TRUE) {
+							end = 1;
+						}
 					}
+
+
+					
 				}
 				else if (e.button.button == SDL_BUTTON_RIGHT) {
 					if (tile->IsFlag == TRUE) {
@@ -272,7 +282,7 @@ int main(int argc, char* argv[]) {
 		// clear the screen
 		SDL_RenderClear(renderer);
 
-		PrintGridSDL(tile_width, tile_height, LightTexture, DarkTexture, Bomb, renderer, &grid,TRUE);
+		PrintGridSDL(tile_width, tile_height, LightTexture, DarkTexture, Bomb, renderer, &grid,FALSE);
 
 		SDL_RenderPresent(renderer);
 

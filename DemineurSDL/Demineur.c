@@ -187,7 +187,7 @@ int COLORS[] = { CYAN, DARKBLUE, DARKBLUE, YELLOW, YELLOW, PINK, PINK, RED };
 		}
 	}
 
-	int GenerateBomb(Grid* pGrid, int iFirst, int jFirst) {
+	int GenerateBomb(Grid* pGrid, int x, int y) {
 		system("cls");
 		float BombRatio;
 		if (pGrid->difficulty == 'E' || pGrid->difficulty == 'e') {
@@ -217,18 +217,18 @@ int COLORS[] = { CYAN, DARKBLUE, DARKBLUE, YELLOW, YELLOW, PINK, PINK, RED };
 		}
 
 
-		int offseti = GetRand(MinOffset, MaxOffset);
-		int offsetj = GetRand(MinOffset, MaxOffset);
+		int offsetX =  GetRand(MinOffset, MaxOffset);
+		int offsetY =  GetRand(MinOffset, MaxOffset);
 
-
-		for (int Currenti = iFirst - 1; Currenti <= iFirst + 1 + offseti; Currenti++) {
-			for (int Currentj = jFirst - 1; Currentj <= jFirst + 1 + offsetj; Currentj++)
+		for (int CurrentX = x - 1; CurrentX <= x + 1 + offsetX; CurrentX++) {
+			for (int CurrentY = y - 1; CurrentY <= y + 1 + offsetY; CurrentY++)
 			{
-				Tile* tile = GetTile(pGrid, Currenti, Currentj);
+				Tile* tile = GetTile(pGrid, CurrentX, CurrentY);
 				if (tile == NULL)
 					continue;
 
-				int RmValue = Currenti * pGrid->size + Currentj;
+				int RmValue = CurrentY * pGrid->size + CurrentX;
+
 				all_index[RmValue] = all_index[size - 1];
 				size--;
 			}
@@ -239,12 +239,22 @@ int COLORS[] = { CYAN, DARKBLUE, DARKBLUE, YELLOW, YELLOW, PINK, PINK, RED };
 			int random_index = rand() % size;
 			int tile_index = all_index[random_index];
 
-			int x = tile_index / pGrid->size;
-			int y = tile_index % pGrid->size;
+			int y = tile_index / pGrid->size;
+			int x = tile_index % pGrid->size;
 
 			Tile* tile = GetTile(pGrid, x, y);
 
 			tile->IsMined = TRUE;
+
+			for (int CurrentY = y - 1; CurrentY <= y + 1; CurrentY++) {
+				for (int CurrentX = x - 1; CurrentX <= x + 1; CurrentX++) {
+					Tile* tile = GetTile(pGrid, CurrentX, CurrentY);
+					if (tile != NULL) {
+						tile->AdjacentMines += 1;
+
+					}
+				}
+			}
 
 			all_index[random_index] = all_index[size - 1];
 
@@ -255,8 +265,6 @@ int COLORS[] = { CYAN, DARKBLUE, DARKBLUE, YELLOW, YELLOW, PINK, PINK, RED };
 
 		return bomb_amount;
 	}
-
-
 
 	void InitGrid(Grid* pGrid, SDL_Texture** LightTab, SDL_Texture** DarkTab) {
 		pGrid->size = AskIntBetween("Rentrez la taille de la grille sur laquelle vous voulez jouer : ",5,min(WIDTH,HEIGHT)/32);
@@ -303,22 +311,23 @@ int COLORS[] = { CYAN, DARKBLUE, DARKBLUE, YELLOW, YELLOW, PINK, PINK, RED };
 		}
 	}
 
-	int GetNeighbour(Grid* pGrid, int i, int j) {
-		int Neighbour = 0;
-		for (int Currenti = i - 1; Currenti <= i + 1; Currenti++) {
-			for (int Currentj = j - 1; Currentj <= j + 1; Currentj++) {
-				Tile* tile = GetTile(pGrid, Currenti, Currentj);
-				if (tile == NULL)
-					continue;
+	
 
-				if (tile->IsMined == TRUE) 
-				{
-					Neighbour++;
+	Grid Init8Grid(Grid* pGrid, SDL_Texture** LightTab, SDL_Texture** DarkTab) {
+		InitGrid(pGrid, LightTab, DarkTab);
+		int randomint = rand() % pGrid->size;
+		for (int i = 0; i < pGrid->size; i++)
+		{
+			for (int j = 0; j < pGrid->size; j++)
+			{
+				if (i != randomint || j != randomint) {
+					Tile* tile = GetTile(pGrid, i, j);
+					tile->IsMined = TRUE;
 				}
 			}
 		}
-		return Neighbour;
 	}
+
 
 	void UpdateGrid(Grid* pGrid, int i, int j)
 	{
@@ -329,10 +338,14 @@ int COLORS[] = { CYAN, DARKBLUE, DARKBLUE, YELLOW, YELLOW, PINK, PINK, RED };
 		if (tile->IsRevealed)
 			return;
 
+
 		tile->IsRevealed = TRUE;
 		pGrid->remainingtiles--;
 
-		tile->AdjacentMines = GetNeighbour(pGrid, i, j);
+		
+		if (tile->AdjacentMines == 8) {
+				EasterEgg();
+		}
 
 		if (tile->AdjacentMines > 0)
 			return;
@@ -350,6 +363,65 @@ int COLORS[] = { CYAN, DARKBLUE, DARKBLUE, YELLOW, YELLOW, PINK, PINK, RED };
 		}
 		return FALSE;
 	}
+
+
+
+	//--------------------------------------DEBUG FONCTION--------------------------------------
+	
+	void InitDebugGrid(Grid* pGrid, SDL_Texture** LightTab, SDL_Texture** DarkTab, int tab[7][7]) {
+		pGrid->size = 7;
+		pGrid->difficulty = NULL;
+
+		pGrid->tile = (Tile**)malloc(sizeof(Tile*) * pGrid->size);
+
+		if (pGrid->tile == NULL) {
+			exit(1);
+		}
+
+		//Allocation de la mémoire pour chaque case
+		for (int i = 0; i < pGrid->size; i++)
+		{
+			pGrid->tile[i] = (Tile*)malloc(pGrid->size * sizeof(Tile));
+			if (pGrid->tile == NULL) {
+				exit(1);
+			}
+		}
+
+		for (int i = 0; i < pGrid->size; i++)
+		{
+			for (int j = 0; j < pGrid->size; j++)
+			{
+				Tile* tile = GetTile(pGrid, i, j);
+
+				tile->x = i;
+				tile->y = j;
+				tile->IsRevealed = FALSE;
+				tile->Value = i * pGrid->size + j;
+				tile->IsMined = FALSE;
+				tile->IsFlag = FALSE;
+				tile->AdjacentMines = 0;
+				if ((i + j) % 2 == 0)
+				{
+					tile->Texture = LightTab[9];
+				}
+				else {
+					tile->Texture = DarkTab[9];
+				}
+			}
+		}
+	}
+
+	void GenerateBombDebug(Grid* pGrid, int tab[7][7]) {
+		for (int i = 0; i < pGrid->size; i++) {
+			for (int j = 0; j < pGrid->size; j++) {
+				if (tab[j][i] == 1) {
+					pGrid->tile[i][j].IsMined = TRUE;
+				}
+			}
+		}
+	}
+	
+	//--------------------------------------DEBUG FONCTION--------------------------------------
 
 	void LaunchGame(Grid* pGrid) 
 	{
@@ -419,7 +491,7 @@ int COLORS[] = { CYAN, DARKBLUE, DARKBLUE, YELLOW, YELLOW, PINK, PINK, RED };
 				return;
 			}
 
-			tile->AdjacentMines = GetNeighbour(pGrid, iUser, jUser);
+		
 		}
 	}
 
@@ -427,6 +499,8 @@ int COLORS[] = { CYAN, DARKBLUE, DARKBLUE, YELLOW, YELLOW, PINK, PINK, RED };
 		
 		char replay = 'y';
 		srand(time(NULL));
+
+		
 
 		do {
 			Grid grid;

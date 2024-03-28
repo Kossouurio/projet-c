@@ -3,6 +3,6 @@ C:\Users\tzocca\source\repos\DemineurSDL\DemineurSDL\Demineur.h(8,1): warning C4
 C:\Users\tzocca\source\repos\DemineurSDL\DemineurSDL\Demineur.h(8,1): message : 'UNICODE' précédemment déclaré en ligne de commande
 C:\Users\tzocca\source\repos\DemineurSDL\DemineurSDL\Demineur.h(9,1): warning C4005: '_UNICODE' : redéfinition de macro
 C:\Users\tzocca\source\repos\DemineurSDL\DemineurSDL\Demineur.h(9,1): message : '_UNICODE' précédemment déclaré en ligne de commande
-C:\Users\tzocca\source\repos\DemineurSDL\DemineurSDL\01_hello_SDL.c(207,47): warning C4244: '=' : conversion de 'double' en 'int', perte possible de données
-C:\Users\tzocca\source\repos\DemineurSDL\DemineurSDL\01_hello_SDL.c(146): warning C4716: 'Restart' : doit retourner une valeur
+C:\Users\tzocca\source\repos\DemineurSDL\DemineurSDL\01_hello_SDL.c(213,47): warning C4244: '=' : conversion de 'double' en 'int', perte possible de données
+C:\Users\tzocca\source\repos\DemineurSDL\DemineurSDL\01_hello_SDL.c(140): warning C4716: 'Restart' : doit retourner une valeur
   DemineurSDL.vcxproj -> C:\Users\tzocca\source\repos\DemineurSDL\x64\Debug\DemineurSDL.exe
